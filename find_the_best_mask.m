@@ -1,12 +1,24 @@
 function find_the_best_mask(weights_raw,mask_img_all)
 
-%tasks: make a best mask 
+%tasks: make a mask for each subject including the largest area possible
+
+%where is this going to go? I can do it as soon as I have weights.
+
+%might want to make a "config file" for default paths.
+
+%I also kind of want to make a sum image just within the region to see how
+%many subjects results are coming from
+
+%maybe if sum goes under a certain number, just cut it out completely?
 
 
-weights_raw=[.5 .5 0 -1 0 0];
+
+% weights_raw=[.5 .5 0 -1 0 0];
 
 
-weights=repmat(weights_raw,[1 11])
+weights=logical(repmat(weights_raw,[1 11]));
+%we want to consider any masks from images we're 
+
 % This version of weights is for a subject -major image. That is, the first
 % couple images are all from the same subject. Like img_all.
 
