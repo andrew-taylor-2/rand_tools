@@ -1,4 +1,4 @@
-function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,fullperfusionimage,cmask_fn)
+function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,fullperfusionimage,cmask_fn,use_partial_data,all_masks_fn)
 %regressor: should be a 11x1 element numerical matrix. 
 %weights: 1x6 element numerical matrix, weights for perfusion images
 %outbasename: char array, don't add a file extension. 
@@ -9,6 +9,19 @@ function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string
 %could be a vector. 
 %fullperfusionimage: filename of that big perfusion image. just use
 %default. 
+
+
+%cool potential config file stuff:
+%     
+%     %load .mat config file
+%     if exist(fullfile(fileparts(mfilename),'config.mat'),'file')
+%         config=load(fullfile(fileparts(mfilename),'config.mat'));
+%     else
+%         error('you haven''t made a config.mat file with paths to data')
+%     end
+%     try all_masks_fn=config.all_masks_fn; catch, error('set up your config file!');end
+
+
 
 %% sanitize inputs
 
@@ -39,6 +52,10 @@ if isrow(regressor)
     regressor=regressor';
 end
 
+if ~exist('use_partial_data','var') || isempty(use_partial_data)
+    use_partial_data=0;
+end
+
 [pth,nme,~]=fileparts(outbasename);
 
 %% make the design and contrast matrices
@@ -61,6 +78,27 @@ jue_atlas=d2n2s(atlasfn);
 motorarea=just_these(jue_atlas,atlasindex,1); % recently added a binarize option to just_these --
 % I'm not sure if randomise treats masks differently based on their values
 % or if it just binarizes based on ~=0 itself. So it's safest to binarize.
+
+%I think find_the_best_mask() should come here. 
+if use_partial_data
+
+    %get the various masks
+    [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(motorarea,weights,all_masks_fn);
+    
+    %then turn your .mats into new .mats with setup_masks
+    [outmat,outcon,rand_cmd_addition,outmsg]=setup_masks(matfn,confn,outbasename,lmask_for_randomise);
+    
+    %to avoid confusion
+    delete(matfn)
+    delete(confn)
+
+    matfn=outmat;
+    confn=outcon;
+else
+    rand_cmd_addition='';    
+end
+%also gzip images lol
+
 
 %load the FOV inclusivity image, which we'll refer to as a "common mask" 
 cmask=d2n2s(cmask_fn);
@@ -89,5 +127,5 @@ marea_fn=d2n2s_write(motorarea,pth,atlseg,'dt',[0 2],'del',1);
 %maybe we can't do any tests in this area.
 
 %make a new output base name
-system(['randomise -i ' randimgfn ' -o ' outbasename ' -d ' matfn ' -t ' confn ' -m ' marea_fn ' --uncorrp ' opt_string ' -n ' n ' -T > ' outbasename '_log.txt &'])
+system(['randomise -i ' randimgfn ' -o ' outbasename ' -d ' matfn ' -t ' confn ' -m ' marea_fn ' --uncorrp ' opt_string rand_cmd_addition ' -n ' n ' -T > ' outbasename '_log.txt &'])
 disp(sprintf(['\n **randomise is running in the background** \n **and its output is going to ' outbasename '_log.txt**']))
