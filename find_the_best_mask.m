@@ -1,67 +1,74 @@
-function find_the_best_mask(weights_raw,mask_img_all)
+function [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(motorarea,weights,all_masks_fn)
+% gets you randomise mask inputs and images for QC
 
-%tasks: make a mask for each subject including the largest area possible
+%load all_masks_fn
+all_masks=d2n2s(all_masks_fn,'no','bvalbvecjson');
 
-%where is this going to go? I can do it as soon as I have weights.
+%grab one obj as a template
+template=all_masks(1);
 
-%might want to make a "config file" for default paths.
+%sanitize input
+weights=logical(weights);
 
-%I also kind of want to make a sum image just within the region to see how
-%many subjects results are coming from
+%% sum across timepoints
 
-%maybe if sum goes under a certain number, just cut it out completely?
-
-
-
-% weights_raw=[.5 .5 0 -1 0 0];
-
-
-weights=logical(repmat(weights_raw,[1 11]));
-%we want to consider any masks from images we're 
-
-% This version of weights is for a subject -major image. That is, the first
-% couple images are all from the same subject. Like img_all.
-
-% W A I T,
-% I think I've been getting the meaning of "-major" wrong. BUt whatever.
-% context clues.
-
-for i=1:11
-    for j=1:6
-        disp((i-1)*6+(j))
-        i
-        j
-    end
-end
-
-%haven't run this next part yet
-clear wimg_all sub_sum %clearing sub sum is dumb given the next line but whatever
-sub_sum=zeros(size(img_all(1).img,1),size(img_all(1).img,2),size(img_all(1).img,3),11);
+sub_sum=zeros(size(all_masks(1).img,1),size(all_masks(1).img,2),size(all_masks(1).img,3),11);
 for i=1:11 %subs
-    %sub_sum(:,:,:,i)=zeros(size(img_all(1).img,1),size(img_all(1).img,2),size(img_all(1).img,3));
     for j=1:6 %time points 
-        %random labeling line to help keep things together.
-        %img_all((i-1)*6+(j)).label=index_path_from_end(perfglob((i-1)*6+(j)).folder,2:3);
         
-        wimg_all((i-1)*6+(j))=img_all((i-1)*6+(j)); %make them equal for convenience, then change the image
-        wimg_all((i-1)*6+(j)).img=img_all((i-1)*6+(j)).img.*weights_raw(j);
+        %make them equal for convenience
+        wall_masks((i-1)*6+(j))=all_masks((i-1)*6+(j)); 
         
-        sub_sum(:,:,:,i)=sub_sum(:,:,:,i)+wimg_all((i-1)*6+(j)).img;
-        %sub_sum_label{i,j}=wimg_all((i-1)*6+(j)).label;
+        %here, stuff will only be counted if weights is not 0/false
+        wall_masks((i-1)*6+(j)).img=all_masks((i-1)*6+(j)).img.*weights_raw(j);
+        
+        %get a sum across timepoints for each subject
+        sub_sum(:,:,:,i)=sub_sum(:,:,:,i)+wall_masks((i-1)*6+(j)).img;
+        
     end
 end
-% 
-% for i=1:11
-%     for j=1:6
-%         disp((i-1)*6+(j))
-%         disp(i)
-%         disp(j)
-%         sub_sum_label{i,j}
-%     end
-% end
 
-for i=1:11
-temp(i)=img_all(1);
-temp(i).img=sub_sum(:,:,:,i);
-end
-inimg27=d2n2s_write(temp,'/Users/dr.robertslab/Andrew/Projects/NASA/d_redo/final_base_to_hdt29','base_to_hdt29_drop')
+
+%% make the output images
+
+%FIRST: we must make a within-subject consensus mask. we can't have partial
+%time-point data, because it would be weighted super wrong.
+
+%how many timepoints is all the relevant timepoints?
+consensus_thresh=sum(logical(weights(1:6)));
+
+%make a XxYxZx11 boolean image (the vox value isn't important bc it's
+%just the number of relevant timepoints or 0)
+sub_sum=binarize_to_value(sub_sum,1,consensus_thresh);
+
+%get sum of subjects with full data in voxel
+num_subs_image=sum(sub_sum,4);
+
+%lets get this in just the ROI, then 0 any values under 7. That's one
+%output. Then we use that as a boolean to cut out values from the 4D image.
+
+%get in just the ROI. 
+num_subs_image(~logical(motorarea.img))=0;
+
+%0 any values under 7
+num_subs_image(num_subs_image<7)=0;
+%that's an output
+
+%binarize to see full region tested
+bin_mask=double(logical(num_subs_image));
+%that's an output
+
+%get the 4d image which shows where data is available (0 value) for each
+%subject
+lmask_for_randomise=double(~logical(sub_sum(logical(num_subs_image))));
+%that's an output
+
+%% put images in objects
+
+%metadata is same for all so assign template
+[num_subs_obj,bin_mask_obj,lmask_obj]=deal(template);
+
+%assign correct voxel data
+num_subs_obj.img=num_subs_image;
+bin_mask_obj.img=bin_mask;
+lmask.img=lmask_for_randomise;
