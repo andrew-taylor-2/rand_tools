@@ -1,4 +1,4 @@
-function [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(motorarea,weights,all_masks_fn)
+function [bin_mask_obj,lmask_obj,num_subs_obj]=find_the_best_mask(motorarea,weights,all_masks_fn)
 % gets you randomise mask inputs and images for QC
 
 %load all_masks_fn
@@ -20,7 +20,7 @@ for i=1:11 %subs
         wall_masks((i-1)*6+(j))=all_masks((i-1)*6+(j)); 
         
         %here, stuff will only be counted if weights is not 0/false
-        wall_masks((i-1)*6+(j)).img=all_masks((i-1)*6+(j)).img.*weights_raw(j);
+        wall_masks((i-1)*6+(j)).img=all_masks((i-1)*6+(j)).img.*weights(j);
         
         %get a sum across timepoints for each subject
         sub_sum(:,:,:,i)=sub_sum(:,:,:,i)+wall_masks((i-1)*6+(j)).img;
@@ -58,9 +58,8 @@ num_subs_image(num_subs_image<7)=0;
 bin_mask=double(logical(num_subs_image));
 %that's an output
 
-%get the 4d image which shows where data is available (0 value) for each
-%subject
-lmask_for_randomise=double(~logical(sub_sum(logical(num_subs_image))));
+%then invert sub_sum
+lmask_for_randomise=double(~logical(sub_sum));
 %that's an output
 
 %% put images in objects
@@ -71,4 +70,13 @@ lmask_for_randomise=double(~logical(sub_sum(logical(num_subs_image))));
 %assign correct voxel data
 num_subs_obj.img=num_subs_image;
 bin_mask_obj.img=bin_mask;
-lmask.img=lmask_for_randomise;
+
+%make lmask large enough (do I not have some other way i do this)
+lmask_obj=repmat(lmask_obj,[1 11]);
+
+%split up the image
+for i=1:size(lmask_for_randomise,4)
+    lmask_obj(i).img=lmask_for_randomise(:,:,:,i);
+end
+
+
