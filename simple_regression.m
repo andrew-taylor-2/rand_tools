@@ -28,9 +28,16 @@ function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string
 if ~exist('fullperfusionimage','var') || isempty(fullperfusionimage)
     fullperfusionimage='/home/second/Desktop/new_perfusion/Data/Perfusion_all_timepoints_subs_in_MNI.nii';
 end
+
 if ~exist('atlasfn','var') || isempty(atlasfn)
-    atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
+    fsldir=getenv('FSLDIR');
+    if ~isempty(fsldir)
+        atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
+    else
+        atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
+    end
 end
+
 if ~exist('opt_string','var') || isempty(opt_string)
     opt_string='';
 end
