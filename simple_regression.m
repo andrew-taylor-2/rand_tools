@@ -1,6 +1,8 @@
-function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,fullperfusionimage,cmask_fn,use_partial_data,all_masks_fn)
-%regressor: should be a 11x1 element numerical matrix.
-%weights: 1x6 element numerical matrix, weights for perfusion images
+function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,fullperfusionimage,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints)
+%regressor: should be a Nx1 element numerical matrix (where N=number
+%subjects)
+%weights: 1xTP element numerical matrix, weights for perfusion images
+%(where TP=number time points)
 %outbasename: char array, don't add a file extension.
 %n: number of permutations in randomise. 5000 is standard and the default but takes a
 %really long time.
@@ -9,6 +11,9 @@ function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string
 %could be a vector.
 %fullperfusionimage: filename of that big perfusion image. just use
 %default.
+
+%fullperfusionimage, all_masks_fn must have all time points for subject 1
+%first, then all time points for subject 2, etc.
 
 
 %cool potential config file stuff:
@@ -63,12 +68,21 @@ if ~exist('use_partial_data','var') || isempty(use_partial_data)
     use_partial_data=0;
 end
 
+if ~exist('num_subs','var') || isempty(num_subs)
+    num_subs=11;
+end
+
+
+if ~exist('num_timepoints','var') || isempty(num_timepoints)
+    num_timepoints=11;
+end
+
 [pth,nme,~]=fileparts(outbasename);
 
 %% make the design and contrast matrices
 demean=@(x) x-mean(x(:));
 
-des=[ones(11,1),demean(regressor)];
+des=[ones(length(regressor),1),demean(regressor)];
 
 con=[0 1; 0 -1];
 
