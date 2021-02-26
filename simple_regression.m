@@ -74,7 +74,7 @@ end
 
 
 if ~exist('num_timepoints','var') || isempty(num_timepoints)
-    num_timepoints=11;
+    num_timepoints=6;
 end
 
 [pth,nme,~]=fileparts(outbasename);
@@ -92,7 +92,7 @@ mkdir(pth)
 %write text file
 [matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
 
-randimgfn=perf_model(fullperfusionimage,weights,pth,[nme '_perfusion_image']);
+randimgfn=perf_model(fullperfusionimage,weights,pth,[nme '_perfusion_image'],num_subs,num_timepoints);
 
 % isolate binary region from atlas
 atlas=d2n2s(atlasfn);
@@ -113,7 +113,7 @@ atlseg=[atlseg strrep(num2str(atlasindex),' ','_')];
 if use_partial_data
     
     %get the various masks
-    [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(functionalarea,weights,all_masks_fn);
+    [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(functionalarea,weights,all_masks_fn,num_subs,num_timepoints,7);
     
     %then turn your .mats into new .mats with setup_masks
     [outmat,outcon,rand_cmd_addition,outmsg]=setup_masks(matfn,confn,outbasename,lmask_for_randomise);
