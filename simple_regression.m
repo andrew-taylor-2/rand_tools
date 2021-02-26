@@ -1,4 +1,4 @@
-function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,fullperfusionimage,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints)
+function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints)
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
@@ -30,8 +30,8 @@ function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string
 
 %% sanitize inputs
 
-if ~exist('fullperfusionimage','var') || isempty(fullperfusionimage)
-    fullperfusionimage='/home/second/Desktop/new_perfusion/Data/Perfusion_all_timepoints_subs_in_MNI.nii';
+if ~exist('fullperfusionimage','var') || isempty(full_perfusion_image_fn)
+    full_perfusion_image_fn='/home/second/Desktop/new_perfusion/Data/Perfusion_all_timepoints_subs_in_MNI.nii';
 end
 
 if ~exist('atlasfn','var') || isempty(atlasfn)
@@ -92,7 +92,7 @@ mkdir(pth)
 %write text file
 [matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
 
-randimgfn=perf_model(fullperfusionimage,weights,pth,[nme '_perfusion_image'],num_subs,num_timepoints);
+randimgfn=perf_model(full_perfusion_image_fn,weights,pth,[nme '_perfusion_image'],num_subs,num_timepoints);
 
 % isolate binary region from atlas
 atlas=d2n2s(atlasfn);
