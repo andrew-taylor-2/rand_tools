@@ -16,35 +16,43 @@ function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string
 %first, then all time points for subject 2, etc.
 
 
-%cool potential config file stuff:
-%
-%     %load .mat config file
-%     if exist(fullfile(fileparts(mfilename),'config.mat'),'file')
-%         config=load(fullfile(fileparts(mfilename),'config.mat'));
-%     else
-%         error('you haven''t made a config.mat file with paths to data')
-%     end
-%     try all_masks_fn=config.all_masks_fn; catch, error('set up your config file!');end
-
+%try to load .mat config file
+cfg_fn=fullfile(fileparts(mfilename),'config.mat');
+if exist(cfg_fn,'file')
+    config=load(cfg_fn);
+    has_cfg=1;
+else
+%     error('you haven''t made a config.mat file with paths to data -- ')
+    has_cfg=0;
+end
 
 
 %% sanitize inputs
 
-if ~exist('fullperfusionimage','var') || isempty(full_perfusion_image_fn)
-    full_perfusion_image_fn='/home/second/Desktop/new_perfusion/Data/Perfusion_all_timepoints_subs_in_MNI.nii';
+if ( ~exist('fullperfusionimage','var') || isempty(full_perfusion_image_fn) ) && has_cfg
+    full_perfusion_image_fn=config.full_functional_image_fn;
+elseif ( ~exist('fullperfusionimage','var') || isempty(full_perfusion_image_fn) ) && ~has_cfg
+    error('no fullperfusionimage was input and cfg file cannot be found')
+%     full_perfusion_image_fn='/home/second/Desktop/new_perfusion/Data/Perfusion_all_timepoints_subs_in_MNI.nii';
 end
 
 
-if ~exist('all_masks_fn','var') || isempty(all_masks_fn)
-    all_masks_fn='/home/second/Desktop/new_perfusion/Data/66masks.nii';
+if ( ~exist('all_masks_fn','var') || isempty(all_masks_fn) ) && has_cfg
+    all_masks_fn=config.full_data_coverage_image_fn;
+elseif ( ~exist('all_masks_fn','var') || isempty(all_masks_fn) ) && ~has_cfg
+    error('no all masks fn was input and cfg file cannot be found')
+%     all_masks_fn='/home/second/Desktop/new_perfusion/Data/66masks.nii';
 end
 
-if ~exist('atlasfn','var') || isempty(atlasfn)
+if ( ~exist('atlasfn','var') || isempty(atlasfn) ) && has_cfg && ( isfield(config,'fsldir') && ~isempty(config.fsldir) )
+    fsldir=config.fsldir;
+elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
     fsldir=getenv('FSLDIR');
     if ~isempty(fsldir)
         atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
     else
-        atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
+        error(' couldn''t find your atlas_fn')
+%         atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
     end
 end
 
@@ -57,8 +65,13 @@ elseif isscalar(n)
     n=num2str(n);
 end
 
-if ~exist('cmask_fn','var') || isempty(cmask_fn)
-    cmask_fn='/home/second/Desktop/new_perfusion/Data/common_mask_all_in_MNI.nii.gz';
+if ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && has_cfg
+    cmask_fn=config.consensus_mask_fn;
+elseif ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && ~has_cfg
+    %not gonna give an error here, because this variable might not be
+    %needed if use_partial_data
+
+%     cmask_fn='/home/second/Desktop/new_perfusion/Data/common_mask_all_in_MNI.nii.gz';
 end
 
 if ~isrow(weights)
