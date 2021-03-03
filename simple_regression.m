@@ -34,6 +34,11 @@ if ~exist('fullperfusionimage','var') || isempty(full_perfusion_image_fn)
     full_perfusion_image_fn='/home/second/Desktop/new_perfusion/Data/Perfusion_all_timepoints_subs_in_MNI.nii';
 end
 
+
+if ~exist('all_masks_fn','var') || isempty(all_masks_fn)
+    all_masks_fn='/home/second/Desktop/new_perfusion/Data/66masks.nii';
+end
+
 if ~exist('atlasfn','var') || isempty(atlasfn)
     fsldir=getenv('FSLDIR');
     if ~isempty(fsldir)
