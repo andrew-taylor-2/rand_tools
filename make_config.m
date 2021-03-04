@@ -13,7 +13,7 @@ if ~exist(full_functional_image_fn,'file')
     error('couldn''t find the full functional time series file')
 else
     try 
-        d2n2s(full_functional_image_fn,'no','bvalbvecjson')
+        d2n2s(full_functional_image_fn,'no','bvalbvecjson');
     catch 
         error('opening full functional time series file in matlab using spm failed')
     end
@@ -23,7 +23,7 @@ if ~exist(full_data_coverage_image_fn,'file')
     error('couldn''t find the full data coverage time series mask file')
 else
     try 
-        d2n2s(full_data_coverage_image_fn,'no','bvalbvecjson')
+        d2n2s(full_data_coverage_image_fn,'no','bvalbvecjson');
     catch 
         error('opening full data coverage time series mask file in matlab using spm failed')
     end
@@ -33,7 +33,7 @@ if ~exist(consensus_mask_fn,'file')
     error('couldn''t find the consensus mask file')
 else
     try 
-        d2n2s(consensus_mask_fn,'no','bvalbvecjson')
+        d2n2s(consensus_mask_fn,'no','bvalbvecjson');
     catch 
         error('opening consensus mask file in matlab using spm failed')
     end
