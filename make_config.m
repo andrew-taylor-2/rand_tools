@@ -1,6 +1,6 @@
 function make_config
 
-config_fn=fullfile(fileparts(mfilename),'config.mat');
+config_fn=fullfile(fileparts(mfilename('fullpath')),'config.mat');
 
 %% give prompts
 full_functional_image_fn=input('give full filename for functional time series nifti');

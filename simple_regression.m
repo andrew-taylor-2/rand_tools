@@ -15,9 +15,12 @@ function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string
 %fullperfusionimage, all_masks_fn must have all time points for subject 1
 %first, then all time points for subject 2, etc.
 
+% The functional regions could have the same name with different extents. I
+% should make those names incorporate the outbasename
+
 
 %try to load .mat config file
-cfg_fn=fullfile(fileparts(mfilename),'config.mat');
+cfg_fn=fullfile(fileparts(mfilename('fullpath')),'config.mat');
 if exist(cfg_fn,'file')
     config=load(cfg_fn);
     has_cfg=1;
