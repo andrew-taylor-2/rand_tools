@@ -49,15 +49,18 @@ end
 
 if ( ~exist('atlasfn','var') || isempty(atlasfn) ) && has_cfg && ( isfield(config,'fsldir') && ~isempty(config.fsldir) )
     fsldir=config.fsldir;
+    atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
+    
 elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
     fsldir=getenv('FSLDIR');
     if ~isempty(fsldir)
         atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
     else
-        error(' couldn''t find your atlas_fn')
-%         atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
+%         error(' couldn''t find your atlas_fn')
+        atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
     end
 end
+assert(exist(atlasfn,'file'))
 
 if ~exist('opt_string','var') || isempty(opt_string)
     opt_string='';
