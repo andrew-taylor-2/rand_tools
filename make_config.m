@@ -6,7 +6,7 @@ config_fn=fullfile(fileparts(mfilename('fullpath')),'config.mat');
 full_functional_image_fn=input('give full filename for functional time series nifti');
 full_data_coverage_image_fn=input('give full filename for data coverage/lesion time series nifti (to be used as a "lesion mask" in randomise)');
 consensus_mask_fn=input('give full filename for consensus mask (where all time series has data -- not used if partial data option is true)');
-
+fsldir=input('give FSLDIR if $FSLDIR is not in environment and FSLDIR isn''t /usr/local/fsl')
 %% check inputs -- file existence and try d2n2s on it
 %functional
 if ~exist(full_functional_image_fn,'file')
@@ -38,6 +38,11 @@ else
         error('opening consensus mask file in matlab using spm failed')
     end
 end
+
+if ~exist(fsldir,'dir')
+    error('fsldir doesn''t seem to exist')
+end
+
 
 %% save
 delete(config_fn)
