@@ -150,8 +150,8 @@ if use_partial_data
     confn=outcon;
     
     %write bin_mask and num_subs_image for 1 -m option randomise and 2. qc.
-    ROI_fn=d2n2s_write(bin_mask,pth,[atlseg '_partial_masked'],'dt',[0 2],'del',1)
-    d2n2s_write(num_subs_image,pth,'num_subs_in_test','dt',[0 2],'del',1)
+    ROI_fn=d2n2s_write(bin_mask,pth,[nme '_' atlseg '_partial_masked'],'dt',[0 2],'del',1)
+    d2n2s_write(num_subs_image,pth,[nme '_num_subs_in_test'],'dt',[0 2],'del',1)
 
     
 else %actually, i think the rest of the script should end up in this conditional
