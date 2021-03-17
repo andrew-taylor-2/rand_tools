@@ -25,4 +25,4 @@ for i=1:num_subs
 temp(i)=img_all(1);
 temp(i).img=sub_sum(:,:,:,i);
 end
-randimgfn=d2n2s_write(temp,folderr,filenamee)
+randimgfn=d2n2s_write(temp,folderr,filenamee,'del',1)
