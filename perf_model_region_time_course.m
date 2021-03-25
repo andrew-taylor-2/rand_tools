@@ -1,8 +1,12 @@
-function randimgfn=perf_model_region_time_course(in_fn,in_weights,folderr,filenamee,num_subs,num_timepoints)
+function randimgfn=perf_model_region_time_course(region_fn,in_fn,weights_raw,folderr,filenamee,num_subs,num_timepoints)
 % img_all=d2n2s(dir('/home/second/Desktop/new_perfusion/Data/Perf*.nii'));
+
 img_all=d2n2s(in_fn);
-% weights_raw=[.5 .5 -1 0 0 0];
-weights_raw=in_weights;
+region=d2n2s(region_fn);
+
+%get the right indices
+weights_bool=logical(weights_raw)
+
 
 
 weights=repmat(weights_raw,[1 num_subs]);
@@ -20,6 +24,14 @@ for i=1:num_subs %subs
         sub_sum(:,:,:,i)=sub_sum(:,:,:,i)+wimg_all((i-1)*num_timepoints+(j)).img;
     end
 end
+
+%what should the output look like?
+
+temp=img_all(1);
+temp=repmat(temp,[])
+
+%output doesn't need to be object, I can just get means staight from here
+
 
 for i=1:num_subs
 temp(i)=img_all(1);
