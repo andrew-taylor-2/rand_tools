@@ -116,28 +116,37 @@ mkdir(pth)
 %write text file
 [matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
 
-randimgfn=perf_model(full_perfusion_image_fn,weights,pth,[nme '_perfusion_image'],num_subs,num_timepoints);
+perf_rois=perf_model_region_time_course(full_perfusion_image_fn,weights,num_subs,num_timepoints);
+%indexing doesn't have to be crazy bc there's a mask for each sub, not for
+%each time point. Or maybe there is a mask for each TP....... no no just
+%kidding there isn't 
 
-% isolate binary region from atlas
-atlas=d2n2s(atlasfn);
-functionalarea=just_these(atlas,atlasindex,1); % recently added a binarize option to just_these --
-% I'm not sure if randomise treats masks differently based on their values
-% or if it just binarizes based on ~=0 itself. So it's safest to binarize.
-
-%come up with a good name for the region
-[~,atlname,~]=fileparts(atlasfn);
-if numel(atlname)>6
-    atlseg=atlname(1:7);
-else
-    atlseg=atlname;
-end
-atlseg=[atlseg strrep(num2str(atlasindex),' ','_')];
+%also I won't need this atlas code bc the region is necessarily within the
+%atlas
+% 
+% % isolate binary region from atlas
+% atlas=d2n2s(atlasfn);
+% functionalarea=just_these(atlas,atlasindex,1); % recently added a binarize option to just_these --
+% % I'm not sure if randomise treats masks differently based on their values
+% % or if it just binarizes based on ~=0 itself. So it's safest to binarize.
+% 
+% %come up with a good name for the region
+% [~,atlname,~]=fileparts(atlasfn);
+% if numel(atlname)>6
+%     atlseg=atlname(1:7);
+% else
+%     atlseg=atlname;
+% end
+% atlseg=[atlseg strrep(num2str(atlasindex),' ','_')];
 
 %I think find_the_best_mask() should come here.
 if use_partial_data
     
     %get the various masks
     [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(functionalarea,weights,all_masks_fn,num_subs,num_timepoints,7);
+    %functionalarea used to include areas where the mask was, but we
+    %shouldn't need that bc the whole region is necessarily in it. 
+    
     
     %then turn your .mats into new .mats with setup_masks
     [outmat,outcon,rand_cmd_addition,outmsg]=setup_masks(matfn,confn,outbasename,lmask_for_randomise);
