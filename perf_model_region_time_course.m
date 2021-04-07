@@ -9,7 +9,9 @@ roi=logical(region.img);
 
 %make templates
 region.img=zeros(size(region.img));
-temp=repmat(region,[num_subs.*num_timepoints 1]);
+[perf_rois{1}{1:num_timepoints}]=deal(do.curly(repmat({region},[num_timepoints 1]),':'));
+perf_rois=repmat(perf_rois,[num_subs 1]);
+%perf rois is now the right size and everything
 
 %get the right indices
 weights_bool=logical(weights_raw);
@@ -27,11 +29,12 @@ for i=1:num_subs %subs
     
     for j=1:num_timepoints %time points
         
+        
         if weights_bool(j) %it's a tp we're looking at
             tp=tp+1;
             theregion=img_all((i-1)*num_timepoints+(j)).img(roi);
             
-            perf_rois{i}(tp)=mean(theregion,'all');
+            perf_rois{i}{tp}=mean(theregion,'all');
         end
         
     end
