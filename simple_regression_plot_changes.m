@@ -144,7 +144,7 @@ if use_partial_data
     
     %make a functional area that includes everything.
     functionalarea=perf_rois{1}{1}; %this perf_rois should always exist....
-    functionalarea.img=double(roi); %gotta make sure this doesn't mess up the dimensions. 
+    functionalarea.img=double(roi); 
     
     %get the various masks
     [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(functionalarea,weights,all_masks_fn,num_subs,num_timepoints,7);
@@ -153,8 +153,9 @@ if use_partial_data
     
     
     %then turn your .mats into new .mats with setup_masks
-    [outmat,outcon,rand_cmd_addition,outmsg]=setup_masks(matfn,confn,outbasename,lmask_for_randomise);
-    
+%     [outmat,outcon,rand_cmd_addition,outmsg]=setup_masks(matfn,confn,outbasename,lmask_for_randomise);
+%we don't need that line at all in this script    
+
     %to avoid confusion
     delete(matfn)
     delete(confn)
@@ -163,8 +164,10 @@ if use_partial_data
     confn=outcon;
     
     %write bin_mask and num_subs_image for 1 -m option randomise and 2. qc.
-    ROI_fn=d2n2s_write(bin_mask,pth,[nme '_' atlseg '_partial_masked'],'dt',[0 2],'del',1)
-    d2n2s_write(num_subs_image,pth,[nme '_num_subs_in_test'],'dt',[0 2],'del',1)
+%     ROI_fn=d2n2s_write(bin_mask,pth,[nme '_' atlseg '_partial_masked'],'dt',[0 2],'del',1)
+%     d2n2s_write(num_subs_image,pth,[nme '_num_subs_in_test'],'dt',[0 2],'del',1)
+
+%don't need to write for this script.
 
     
 else %actually, i think the rest of the script should end up in this conditional
@@ -185,11 +188,20 @@ else %actually, i think the rest of the script should end up in this conditional
     
     
     %write the new image and assign the filename to a variable
-    ROI_fn=d2n2s_write(functionalarea,pth,atlseg,'dt',[0 2],'del',1);
-    %note that there really isn't much left of this area after we mask it --
-    %maybe we can't do any tests in this area.
-    
+%     ROI_fn=d2n2s_write(functionalarea,pth,atlseg,'dt',[0 2],'del',1);
+%don't need to write for this script
+
 end
+
+%okay so normally randomise does masking for us, so I'm gonna have to write
+%a new function for masking now. 
+%   we'll use either functionalarea (no partial) or bin_mask and lmask.
+%   gonna have to use inds.(blah) to figure out what of lmask to use right?
+% is lmask one per subject or one per relevant timepoint?
+
+
+
+
 
 
 
