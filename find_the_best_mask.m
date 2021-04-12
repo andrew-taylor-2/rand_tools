@@ -1,4 +1,4 @@
-function [bin_mask_obj,lmask_obj,num_subs_obj]=find_the_best_mask(motorarea,weights,all_masks_fn,num_subs,num_timepoints,no_use_thresh)
+function [bin_mask_obj,lmask_obj,num_subs_obj]=find_the_best_mask(functionalarea,weights,all_masks_fn,num_subs,num_timepoints,no_use_thresh)
 % gets you randomise mask inputs and images for QC
 
 % if ~exist('no_use_thresh','var') || isempty(no_use_thresh)
@@ -53,7 +53,7 @@ num_subs_image=sum(sub_sum,4);
 %output. Then we use that as a boolean to cut out values from the 4D image.
 
 %get in just the ROI. 
-num_subs_image(~logical(motorarea.img))=0;
+num_subs_image(~logical(functionalarea.img))=0;
 
 %0 any values under no_use_thresh
 num_subs_image(num_subs_image<no_use_thresh)=0;
