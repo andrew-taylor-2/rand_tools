@@ -116,7 +116,7 @@ mkdir(pth)
 %write text file
 [matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
 
-perf_rois=perf_model_region_time_course(full_perfusion_image_fn,weights,num_subs,num_timepoints);
+[perf_rois,roi,inds]=perf_model_region_time_course(full_perfusion_image_fn,weights,num_subs,num_timepoints);
 %indexing doesn't have to be crazy bc there's a mask for each sub, not for
 %each time point. Or maybe there is a mask for each TP....... no no just
 %kidding there isn't 
@@ -141,6 +141,10 @@ perf_rois=perf_model_region_time_course(full_perfusion_image_fn,weights,num_subs
 
 %I think find_the_best_mask() should come here.
 if use_partial_data
+    
+    %make a functional area that includes everything.
+    functionalarea=perf_rois{1}{1}; %this perf_rois should always exist....
+    functionalarea.img=double(roi); %gotta make sure this doesn't mess up the dimensions. 
     
     %get the various masks
     [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(functionalarea,weights,all_masks_fn,num_subs,num_timepoints,7);
