@@ -1,4 +1,4 @@
-function lmask_for_randomise=simple_regression_plot_changes(regressor,weights,outbasename,n,~,opt_string,atlasfn,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn)
+function lmask_for_randomise=simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,atlasfn,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn)
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
@@ -59,26 +59,26 @@ elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
 %         error(' couldn''t find your atlas_fn')
         atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
     end
-end
-assert(exist(atlasfn,'file'))
-
-if ~exist('opt_string','var') || isempty(opt_string)
-    opt_string='';
-end
-if ~exist('n','var') || isempty(n)
-    n='5000';
-elseif isscalar(n)
-    n=num2str(n);
-end
-
-if ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && has_cfg
-    cmask_fn=config.consensus_mask_fn;
-elseif ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && ~has_cfg
-    %not gonna give an error here, because this variable might not be
-    %needed if use_partial_data
-
-%     cmask_fn='/home/second/Desktop/new_perfusion/Data/common_mask_all_in_MNI.nii.gz';
-end
+% end
+% assert(exist(atlasfn,'file'))
+% 
+% if ~exist('opt_string','var') || isempty(opt_string)
+%     opt_string='';
+% end
+% if ~exist('n','var') || isempty(n)
+%     n='5000';
+% elseif isscalar(n)
+%     n=num2str(n);
+% end
+% 
+% if ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && has_cfg
+%     cmask_fn=config.consensus_mask_fn;
+% elseif ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && ~has_cfg
+%     %not gonna give an error here, because this variable might not be
+%     %needed if use_partial_data
+% 
+% %     cmask_fn='/home/second/Desktop/new_perfusion/Data/common_mask_all_in_MNI.nii.gz';
+% end
 
 if ~isrow(weights)
     weights=weights';
@@ -104,17 +104,17 @@ end
 [pth,nme,~]=fileparts(outbasename);
 
 %% make the design and contrast matrices
-demean=@(x) x-mean(x(:));
-
-des=[ones(length(regressor),1),demean(regressor)];
-
-con=[0 1; 0 -1];
+% demean=@(x) x-mean(x(:));
+% 
+% des=[ones(length(regressor),1),demean(regressor)];
+% 
+% con=[0 1; 0 -1];
 
 %if output folder isnt' a folder yet, make it
 % mkdir(pth)
 
 %write text file
-[matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
+% [matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
 
 [perf_rois,roi,inds]=perf_model_region_time_course(sig_region_fn,full_perfusion_image_fn,weights,num_subs,num_timepoints);
 %indexing doesn't have to be crazy bc there's a mask for each sub, not for
@@ -157,11 +157,11 @@ if use_partial_data
 %we don't need that line at all in this script    
 
     %to avoid confusion
-    delete(matfn)
-    delete(confn)
+%     delete(matfn)
+%     delete(confn)
     
-    matfn=outmat;
-    confn=outcon;
+%     matfn=outmat;
+%     confn=outcon;
     
     %write bin_mask and num_subs_image for 1 -m option randomise and 2. qc.
 %     ROI_fn=d2n2s_write(bin_mask,pth,[nme '_' atlseg '_partial_masked'],'dt',[0 2],'del',1)
@@ -221,7 +221,7 @@ xaxlabels(logical(weights))=[];
 %get the distinguishable colors here
 for i=1:num_subs
     
-    plot(means{i},[1:num_timepoints])
+    plot(means{i},1:num_timepoints)
     hold on
 end
 hold off
