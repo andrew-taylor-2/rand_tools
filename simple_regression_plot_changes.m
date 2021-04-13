@@ -1,4 +1,4 @@
-function simple_regression_plot_changes(regressor,weights,outbasename,n,~,opt_string,atlasfn,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn)
+function lmask_for_randomise=simple_regression_plot_changes(regressor,weights,outbasename,n,~,opt_string,atlasfn,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn)
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
@@ -111,7 +111,7 @@ des=[ones(length(regressor),1),demean(regressor)];
 con=[0 1; 0 -1];
 
 %if output folder isnt' a folder yet, make it
-mkdir(pth)
+% mkdir(pth)
 
 %write text file
 [matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
@@ -173,18 +173,7 @@ if use_partial_data
 else %actually, i think the rest of the script should end up in this conditional
     rand_cmd_addition='';
     
-    
-    %load the FOV inclusivity image, which we'll refer to as a "common mask"
-    cmask=d2n2s(cmask_fn);
-    
-    %now we want to set our motor area to 0 anywhere that our common mask has
-    %1 (after the inversion we just did). On the next line is an assignment that only assigns to array elements
-    %for which logical_mask has a true value.
-    functionalarea.img(~logical(cmask.img))=0;
-    
-    if isequal(unique(functionalarea.img(:)),0)
-        error('the image for the region being tested in randomise has no non-zero values -- likely the entire region was outside the common mask')
-    end
+    functionalarea=d2n2s(sig_region_fn,'no','bvecbvaljson');
     
     
     %write the new image and assign the filename to a variable
@@ -211,17 +200,15 @@ num_tps=sum(logical(weights));
 for i=1:num_subs
     
     %invert lmask
-    lmask_for_randomise(i).img
+    lmask_for_randomise(i).img(:)=~lmask_for_randomise(i).img; %stephen cobeldick says it's cool
         
     %find an AND of lmask and sig region/functionalarea
+    lmask_for_randomise(i).img=lmask_for_randomise(i).img & functionalarea.img; % no need to repmat since we're doing it for every sub    repmat(functionalarea.img,[1 1 1 num_subs])
     
     for j=tp:num_tps
+        %for each tp find the mean
         
-        
-        
-        lmask_for_randomise(i).img(roi) % LMASK FOR RANDOMISE IS NOT SPECIFIC TO THE FUNCTIONALAREA AKA THE SIG AREA so we need to do that
-        rois{i}=logical(); %I need to keep this so i know which area to mean (or will i just use lmask)
-        perf_rois{i}{tp}.img(rois{i})=0;
+        means{i}(tp)=mean(perf_rois{i}{tp}.img(logical(lmask_for_randomise(i).img)),'all');
     end
 end
 
@@ -231,6 +218,13 @@ xaxlabels={'BDC13','BDC7','HDT7','HDT29','R5','R12'};
 xaxlabels(logical(weights))=[];
 %okay now we already have what to label the stuff with. 
 
+%get the distinguishable colors here
+for i=1:num_subs
+    
+    plot(means{i},[1:num_timepoints])
+    hold on
+end
+hold off
 
 
 
@@ -244,11 +238,11 @@ xaxlabels(logical(weights))=[];
 
 
 %% end
-
-%make a new output base name
-system(['randomise -i ' randimgfn ' -o ' outbasename ' -d ' matfn ' -t ' confn ' -m ' ROI_fn ' --uncorrp ' opt_string rand_cmd_addition ' -n ' n ' -T > ' outbasename '_log.txt &'])
-disp(sprintf(['\n **randomise is running in the background** \n **and its output is going to ' outbasename '_log.txt**']))
-    
+% 
+% %make a new output base name
+% system(['randomise -i ' randimgfn ' -o ' outbasename ' -d ' matfn ' -t ' confn ' -m ' ROI_fn ' --uncorrp ' opt_string rand_cmd_addition ' -n ' n ' -T > ' outbasename '_log.txt &'])
+% disp(sprintf(['\n **randomise is running in the background** \n **and its output is going to ' outbasename '_log.txt**']))
+%     
 
 
 % %also gzip images lol
