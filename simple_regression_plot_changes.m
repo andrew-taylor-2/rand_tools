@@ -1,4 +1,4 @@
-function simple_regression_plot_changes(regressor,weights,outbasename,n,~,opt_string,atlasfn,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints)
+function simple_regression_plot_changes(regressor,weights,outbasename,n,~,opt_string,atlasfn,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn)
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
@@ -116,7 +116,7 @@ mkdir(pth)
 %write text file
 [matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
 
-[perf_rois,roi,inds]=perf_model_region_time_course(full_perfusion_image_fn,weights,num_subs,num_timepoints);
+[perf_rois,roi,inds]=perf_model_region_time_course(sig_region_fn,full_perfusion_image_fn,weights,num_subs,num_timepoints);
 %indexing doesn't have to be crazy bc there's a mask for each sub, not for
 %each time point. Or maybe there is a mask for each TP....... no no just
 %kidding there isn't 
@@ -199,11 +199,31 @@ end
 %   gonna have to use inds.(blah) to figure out what of lmask to use right?
 % is lmask one per subject or one per relevant timepoint?
 
+%mask EACH perf_roi and then get average for EACH element of perf_roi
+
+%i have these index changy things
+% inds.stp_2_1dim{i}{tp}=(i-1)*num_timepoints+(j);
+% inds.stp_2_ij{i}{tp}=[i,j];
 
 
-
-
-
+%sub-mask the perf roi:
+num_tps=sum(logical(weights));
+for i=1:num_subs
+    
+    %invert lmask
+    lmask_for_randomise(i).img
+        
+    %find an AND of lmask and sig region/functionalarea
+    
+    for j=tp:num_tps
+        
+        
+        
+        lmask_for_randomise(i).img(roi) % LMASK FOR RANDOMISE IS NOT SPECIFIC TO THE FUNCTIONALAREA AKA THE SIG AREA so we need to do that
+        rois{i}=logical(); %I need to keep this so i know which area to mean (or will i just use lmask)
+        perf_rois{i}{tp}.img(rois{i})=0;
+    end
+end
 
 %% okay here's some stuff specifically for graphing
 
