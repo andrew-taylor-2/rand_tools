@@ -18,6 +18,7 @@ function lmask_for_randomise=simple_regression_plot_changes(regressor,weights,ou
 % The functional regions could have the same name with different extents. I
 % should make those names incorporate the outbasename
 
+do=get_anonymous_functions;
 
 %try to load .mat config file
 cfg_fn=fullfile(fileparts(mfilename('fullpath')),'config.mat');
@@ -47,19 +48,19 @@ elseif ( ~exist('all_masks_fn','var') || isempty(all_masks_fn) ) && ~has_cfg
 %     all_masks_fn='/home/second/Desktop/new_perfusion/Data/66masks.nii';
 end
 
-% if ( ~exist('atlasfn','var') || isempty(atlasfn) ) && has_cfg && ( isfield(config,'fsldir') && ~isempty(config.fsldir) )
-%     fsldir=config.fsldir;
-%     atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
-%     
-% elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
-%     fsldir=getenv('FSLDIR');
-%     if ~isempty(fsldir)
-%         atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
-%     else
-% %         error(' couldn''t find your atlas_fn')
-%         atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
-%     end
-% end
+if ( ~exist('atlasfn','var') || isempty(atlasfn) ) && has_cfg && ( isfield(config,'fsldir') && ~isempty(config.fsldir) )
+    fsldir=config.fsldir;
+    atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
+    
+elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
+    fsldir=getenv('FSLDIR');
+    if ~isempty(fsldir)
+        atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
+    else
+%         error(' couldn''t find your atlas_fn')
+        atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
+    end
+end
 % assert(exist(atlasfn,'file'))
 % 
 % if ~exist('opt_string','var') || isempty(opt_string)
@@ -278,6 +279,44 @@ set(get(ax3,'XLabel'),'String',['Behavior Contrast Value: ' beh_label])
 % subs had data)
 
 %% okay now add the part where we display the region on MNI
-mnit1=d2n2s('
+
+% COPY AND PASTED SPM GEMS FOLLOWS
+% Make sure to first clear the graphics window
+ 
+% Select images
+% Pbck = spm_get(1,'*.img','Select background image')
+Pbck=do.gunzip_and_rename(do.copy_and_rename(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'),'mnit12mm.nii.gz'));
+% Psta = spm_get(1,'*.img','Select statistic image')
+Psta=do.gunzip_and_rename_no_delete(sig_region_fn);
+ 
+% Set the threshold value
+Th   = 0.95;  
+ 
+% Create a new image where all voxels below Th have value NaN
+PstaTh = do.append(Psta,'nan4disp');
+spm_imcalc(Psta,PstaTh,'i1+(0./(i1>=Th))',{[],[],spm_type('float')},Th);
+ 
+% Display!
+clear global st
+ff=figure;
+spm_orthviews('image',Pbck,[0.05 0.05 0.9 0.9],ff); %reposition using the line that happens later
+spm_orthviews('addimage',1,PstaTh)
+ 
+% Possibly, set the crosshairs to your favorite location
+
+%find most significant voxel, reposition to it
+%cant' believe im loading this again
+regg=d2n2s(sig_region_fn);
+[~,maxind]=max(regg.img(:));
+[x,y,z]=ind2sub(size(regg.img),maxind)
+ijk=regg.hdr.mat*[x,y,z,1]';
+clear global st
+spm_orthviews('reposition',[ijk(1) ijk(2) ijk(3)])
+delete(Pbck)
+% END GEMS 
+
+
+% mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'));
+
 
 
