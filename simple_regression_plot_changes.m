@@ -1,4 +1,4 @@
-function lmask_for_randomise=simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn,perf_label,beh_label)
+function lmask_for_randomise=simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn,perf_label,beh_label,sans_vec)
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
@@ -175,6 +175,7 @@ else %actually, i think the rest of the script should end up in this conditional
     rand_cmd_addition='';
     
     functionalarea=d2n2s(sig_region_fn,'no','bvecbvaljson');
+    functionalarea.img(functionalarea.img<.949999)=0;
     
     
     %write the new image and assign the filename to a variable
@@ -252,9 +253,7 @@ end
 
 %% add brain
 
-tiledlayout(1,5)
-
-
+figure;
 % OKAY i can't get gems to work so let's do this my way
 mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'));
 regg=d2n2s(sig_region_fn,'no','bvecbvaljson');
@@ -266,7 +265,7 @@ regg=d2n2s(sig_region_fn,'no','bvecbvaljson');
 regg.img(regg.img<.95)=0;
 
 %COPY and paste mathworks help
-axe1 = nexttile; 
+axe1 = axes; 
 im = imagesc(axe1,mnit1.img(:,:,z)); 
 im.AlphaData = 0.5; % change this value to change the background image transparency 
 axis square; 
@@ -288,7 +287,7 @@ colormap(axe2,'jet')
 %set the axes and colorbar position 
 set([axe1,axe2],'Position',[.17 .11 .685 .815]); 
 % cb1 = colorbar(axe1,'Position',[.05 .11 .0675 .815]); 
-cb2 = colorbar(axe2,'Position',[.88 .11 .0675 .815]); 
+% cb2 = colorbar(axe2,'Position',[.88 .11 .0675 .815]); 
 %end copy paste
 
 
@@ -297,7 +296,9 @@ cb2 = colorbar(axe2,'Position',[.88 .11 .0675 .815]);
 
 %% and here's a block for "contrast score"
 %need to apply the contrasts to these
-nexttile(3,[1 2])
+figure;
+tiledlayout(1,3)
+nexttile(1,[1 3])
 
 
 
@@ -315,9 +316,18 @@ for i=1:num_subs
     conmeans(i)=mean(summ{i},'all');
 end
 
-% figg=figure;
 
-scatter(conmeans,regressor,35,cvecs,'filled')
+%actually plot
+hold on
+for i=1:length(regressor)
+    if sans_vec(i)==1
+        scatter(conmeans(i),regressor(i),50,cvecs(i,:),'Marker','+')
+    else
+        scatter(conmeans(i),regressor(i),50,cvecs(i,:),'Marker','o')
+    end
+end
+hold off
+
 ax3=gca
 set(get(ax3,'YLabel'),'String',['Perfusion Contrast Value: ' perf_label])
 set(get(ax3,'XLabel'),'String',['Behavior Contrast Value: ' beh_label])
