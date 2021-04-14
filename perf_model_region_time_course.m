@@ -9,7 +9,7 @@ do=get_anonymous_functions;
 
 img_all=d2n2s(in_fn);
 region=d2n2s(region_fn);
-roi=logical(region.img);
+roi=region.img>0.94999;
 
 %make templates
 region.img=zeros(size(region.img));
