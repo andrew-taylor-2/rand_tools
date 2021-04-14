@@ -279,41 +279,83 @@ set(get(ax3,'XLabel'),'String',['Behavior Contrast Value: ' beh_label])
 % subs had data)
 
 %% okay now add the part where we display the region on MNI
+% 
+% % COPY AND PASTED SPM GEMS FOLLOWS
+% % Make sure to first clear the graphics window
+%  
+% % Select images
+% % Pbck = spm_get(1,'*.img','Select background image')
+% Pbck=do.gunzip_and_rename(do.copy_and_rename(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'),'mnit12mm.nii.gz'));
+% % Psta = spm_get(1,'*.img','Select statistic image')
+% Psta=do.gunzip_and_rename_no_delete(sig_region_fn);
+%  
+% % Set the threshold value
+% Th   = 0.95;  
+%  
+% % Create a new image where all voxels below Th have value NaN
+% PstaTh = do.append(Psta,'nan4disp');
+% spm_imcalc(Psta,PstaTh,'i1+(0./(i1>=Th))',{[],[],spm_type('float')},Th);
+%  
+% % Display!
+% clear global st
+% ff=figure;
+% spm_orthviews('image',Pbck,[0.05 0.05 0.9 0.9],ff); %reposition using the line that happens later
+% spm_orthviews('addimage',1,PstaTh)
+%  
+% % Possibly, set the crosshairs to your favorite location
+% 
+% %find most significant voxel, reposition to it
+% %cant' believe im loading this again
+% regg=d2n2s(sig_region_fn);
+% [~,maxind]=max(regg.img(:));
+% [x,y,z]=ind2sub(size(regg.img),maxind)
+% ijk=regg.hdr.mat*[x,y,z,1]';
+% clear global st
+% spm_orthviews('reposition',[ijk(1) ijk(2) ijk(3)])
+% delete(Pbck)
+% % END GEMS 
 
-% COPY AND PASTED SPM GEMS FOLLOWS
-% Make sure to first clear the graphics window
- 
-% Select images
-% Pbck = spm_get(1,'*.img','Select background image')
-Pbck=do.gunzip_and_rename(do.copy_and_rename(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'),'mnit12mm.nii.gz'));
-% Psta = spm_get(1,'*.img','Select statistic image')
-Psta=do.gunzip_and_rename_no_delete(sig_region_fn);
- 
-% Set the threshold value
-Th   = 0.95;  
- 
-% Create a new image where all voxels below Th have value NaN
-PstaTh = do.append(Psta,'nan4disp');
-spm_imcalc(Psta,PstaTh,'i1+(0./(i1>=Th))',{[],[],spm_type('float')},Th);
- 
-% Display!
-clear global st
-ff=figure;
-spm_orthviews('image',Pbck,[0.05 0.05 0.9 0.9],ff); %reposition using the line that happens later
-spm_orthviews('addimage',1,PstaTh)
- 
-% Possibly, set the crosshairs to your favorite location
+% OKAY i can't get gems to work so let's do this my way
+mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'));
+regg=d2n2s(sig_region_fn,'no','bvecbvaljson');
 
-%find most significant voxel, reposition to it
-%cant' believe im loading this again
-regg=d2n2s(sig_region_fn);
 [~,maxind]=max(regg.img(:));
-[x,y,z]=ind2sub(size(regg.img),maxind)
-ijk=regg.hdr.mat*[x,y,z,1]';
-clear global st
-spm_orthviews('reposition',[ijk(1) ijk(2) ijk(3)])
-delete(Pbck)
-% END GEMS 
+[~,~,z]=ind2sub(size(regg.img),maxind);
+
+%thresh regg
+regg.img(regg.img<.95)=0;
+
+%COPY and paste mathworks help
+axe1 = axes; 
+im = imagesc(axe1,mnit1.img(:,:,z)); 
+im.AlphaData = 0.5; % change this value to change the background image transparency 
+axis square; 
+hold all; 
+%plot second data 
+axe2 = axes; 
+im1 = imagesc(axe2,regg.img(:,:,z)); 
+im1.AlphaData = 0.5; % change this value to change the foreground image transparency 
+axis square; 
+%link axes 
+linkaxes([axe1,axe2]) 
+%%Hide the top axes 
+axe2.Visible = 'off'; 
+axe2.XTick = []; 
+axe2.YTick = []; 
+%add differenct colormap to different data if you wish 
+colormap(axe1,'gray') 
+colormap(axe2,'jet') 
+%set the axes and colorbar position 
+set([axe1,axe2],'Position',[.17 .11 .685 .815]); 
+% cb1 = colorbar(axe1,'Position',[.05 .11 .0675 .815]); 
+cb2 = colorbar(axe2,'Position',[.88 .11 .0675 .815]); 
+%end copy paste
+
+
+
+
+imagesc(
+
 
 
 % mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'));
