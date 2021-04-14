@@ -1,4 +1,4 @@
-function lmask_for_randomise=simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,atlasfn,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn)
+function lmask_for_randomise=simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn,perf_label,beh_label)
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
@@ -47,18 +47,18 @@ elseif ( ~exist('all_masks_fn','var') || isempty(all_masks_fn) ) && ~has_cfg
 %     all_masks_fn='/home/second/Desktop/new_perfusion/Data/66masks.nii';
 end
 
-if ( ~exist('atlasfn','var') || isempty(atlasfn) ) && has_cfg && ( isfield(config,'fsldir') && ~isempty(config.fsldir) )
-    fsldir=config.fsldir;
-    atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
-    
-elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
-    fsldir=getenv('FSLDIR');
-    if ~isempty(fsldir)
-        atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
-    else
-%         error(' couldn''t find your atlas_fn')
-        atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
-    end
+% if ( ~exist('atlasfn','var') || isempty(atlasfn) ) && has_cfg && ( isfield(config,'fsldir') && ~isempty(config.fsldir) )
+%     fsldir=config.fsldir;
+%     atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
+%     
+% elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
+%     fsldir=getenv('FSLDIR');
+%     if ~isempty(fsldir)
+%         atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
+%     else
+% %         error(' couldn''t find your atlas_fn')
+%         atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
+%     end
 % end
 % assert(exist(atlasfn,'file'))
 % 
@@ -205,75 +205,79 @@ for i=1:num_subs
     %find an AND of lmask and sig region/functionalarea
     lmask_for_randomise(i).img=lmask_for_randomise(i).img & functionalarea.img; % no need to repmat since we're doing it for every sub    repmat(functionalarea.img,[1 1 1 num_subs])
     
-    for j=tp:num_tps
+    for tp=1:num_tps
         %for each tp find the mean
-        
-        means{i}(tp)=mean(perf_rois{i}{tp}.img(logical(lmask_for_randomise(i).img)),'all');
+        data{i}{tp}=perf_rois{i}{tp}.img(logical(lmask_for_randomise(i).img));
+        means{i}(tp)=mean(data{i}{tp},'all');
     end
 end
 
-%% okay here's some stuff specifically for graphing
+%% begin the graphing
 
 xaxlabels={'BDC13','BDC7','HDT7','HDT29','R5','R12'};
 xaxlabels(logical(weights))=[];
 %okay now we already have what to label the stuff with. 
+cvecs=distinguishable_colors(num_subs);
 
+% tiled layout ideas
+tiledlayout(1,3)
+nexttile(1,[1 2])
+
+%% this block is specific to the line graph idea
 %get the distinguishable colors here
 for i=1:num_subs
     
-    plot(means{i},1:num_timepoints)
+    plot(1:num_tps,means{i},'Color',cvecs(i,:),'LineWidth',3.5)
     hold on
 end
 hold off
 
+ax=gca
+set(ax,'XTick',1:num_tps)
+set(ax,'XTickLabel',xaxlabels)
+set(ax,'XLim',[1-.3 num_tps+.3])
 
 
+%% okay, now add the stuff for beh scores
+nexttile
+
+scatter(ones(1,length(regressor)),regressor,35,cvecs,'filled')
+ax2=gca
+set(ax2,'XTick',[])
 
 
+%% and here's a block for "contrast score"
+%need to apply the contrasts to these
+relweights=weights;
+relweights(weights==0)=[];
+for i=1:num_subs
+    summ{i}=zeros(size(data{i}{tp}));
+    for tp=1:num_tps
+        summ{i}=summ{i}+data{i}{tp}.*relweights(tp);
+    end
+    conmeans(i)=mean(summ{i},'all');
+end
+
+figure;
+
+scatter(conmeans,regressor,35,cvecs,'filled')
+ax3=gca
+set(get(ax3,'YLabel'),'String',['Perfusion Contrast Value: ' perf_label])
+set(get(ax3,'XLabel'),'String',['Behavior Contrast Value: ' beh_label])
+
+% set(ax3,'XTick',[])
+
+%ADD LABEL FOR SANS SUBS:
+% I should use different markers 
+%eg 'Marker','+' OR 'Marker','o' for sans,
+%nonsans
+
+%could i (instead of using whole significant region)
+% just use the most significant voxel? (this is too sophisticated to
+% implement now but also what if i used the biggest region where the most
+% subs had data)
+
+%% okay now add the part where we display the region on MNI
+mnit1=d2n2s('
 
 
-
-
-
-
-
-%% end
-% 
-% %make a new output base name
-% system(['randomise -i ' randimgfn ' -o ' outbasename ' -d ' matfn ' -t ' confn ' -m ' ROI_fn ' --uncorrp ' opt_string rand_cmd_addition ' -n ' n ' -T > ' outbasename '_log.txt &'])
-% disp(sprintf(['\n **randomise is running in the background** \n **and its output is going to ' outbasename '_log.txt**']))
-%     
-
-
-% %also gzip images lol
-%
-%
-% %load the FOV inclusivity image, which we'll refer to as a "common mask"
-% cmask=d2n2s(cmask_fn);
-%
-% %now we want to set our motor area to 0 anywhere that our common mask has
-% %1 (after the inversion we just did). On the next line is an assignment that only assigns to array elements
-% %for which logical_mask has a true value.
-% motorarea.img(~logical(cmask.img))=0;
-%
-% if isequal(unique(motorarea.img(:)),0)
-%     error('the image for the region being tested in randomise has no non-zero values -- likely the entire region was outside the common mask')
-% end
-%
-% %come up with a good name for the region
-% [~,atlname,~]=fileparts(atlasfn);
-% if numel(atlname)>6
-%     atlseg=atlname(1:7);
-% else
-%     atlseg=atlname;
-% end
-% atlseg=[atlseg strrep(num2str(atlasindex),' ','_')];
-%
-% %write the new image and assign the filename to a variable
-% marea_fn=d2n2s_write(motorarea,pth,atlseg,'dt',[0 2],'del',1);
-% %note that there really isn't much left of this area after we mask it --
-% %maybe we can't do any tests in this area.
-%
-% %make a new output base name
-% system(['randomise -i ' randimgfn ' -o ' outbasename ' -d ' matfn ' -t ' confn ' -m ' marea_fn ' --uncorrp ' opt_string rand_cmd_addition ' -n ' n ' -T > ' outbasename '_log.txt &'])
-% disp(sprintf(['\n **randomise is running in the background** \n **and its output is going to ' outbasename '_log.txt**']))
