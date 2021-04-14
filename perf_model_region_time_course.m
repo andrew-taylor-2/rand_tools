@@ -1,5 +1,5 @@
 function [perf_rois,roi,inds]=perf_model_region_time_course(region_fn,in_fn,weights_raw,num_subs,num_timepoints)
-
+do=get_anonymous_functions;
 %what do i want out of this? I think it's gonna be just the relevant area
 %from the region out of img_all. but it's got to be a full image/nii bc i
 %with later mask it some more
