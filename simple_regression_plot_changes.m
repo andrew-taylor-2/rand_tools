@@ -1,4 +1,4 @@
-function lmask_for_randomise=simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn,perf_label,beh_label,sans_vec)
+function simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn,perf_label,beh_label,sans_vec)
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
