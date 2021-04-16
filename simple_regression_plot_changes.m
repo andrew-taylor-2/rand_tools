@@ -222,33 +222,6 @@ xaxlabels(logical(weights))=[];
 cvecs=distinguishable_colors(num_subs);
 
 
-if false
-    % tiled layout ideas
-    tiledlayout(1,5)
-    nexttile(1,[1 3])
-    
-    %% this block is specific to the line graph idea
-    %get the distinguishable colors here
-    for i=1:num_subs
-        
-        plot(1:num_tps,means{i},'Color',cvecs(i,:),'LineWidth',3.5)
-        hold on
-    end
-    hold off
-    
-    ax=gca
-    set(ax,'XTick',1:num_tps)
-    set(ax,'XTickLabel',xaxlabels)
-    set(ax,'XLim',[1-.3 num_tps+.3])
-    
-    
-    %% okay, now add the stuff for beh scores
-    nexttile
-    
-    scatter(ones(1,length(regressor)),regressor,35,cvecs,'filled')
-    ax2=gca
-    set(ax2,'XTick',[])
-end
 
 
 %% add brain
@@ -259,36 +232,55 @@ mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'));
 regg=d2n2s(sig_region_fn,'no','bvecbvaljson');
 
 [~,maxind]=max(regg.img(:));
-[~,~,z]=ind2sub(size(regg.img),maxind);
+[x,y,z]=ind2sub(size(regg.img),maxind);
 
 %thresh regg
 regg.img(regg.img<.95)=0;
 
-%COPY and paste mathworks help
-axe1 = axes; 
-im = imagesc(axe1,mnit1.img(:,:,z)); 
-im.AlphaData = 0.5; % change this value to change the background image transparency 
-axis square; 
-hold all; 
-%plot second data 
-axe2 = axes; 
-im1 = imagesc(axe2,regg.img(:,:,z)); 
-im1.AlphaData = 0.5; % change this value to change the foreground image transparency 
-axis square; 
-%link axes 
-linkaxes([axe1,axe2]) 
-%%Hide the top axes 
-axe2.Visible = 'off'; 
-axe2.XTick = []; 
-axe2.YTick = []; 
-%add differenct colormap to different data if you wish 
-colormap(axe1,'gray') 
-colormap(axe2,'jet') 
-%set the axes and colorbar position 
-set([axe1,axe2],'Position',[.17 .11 .685 .815]); 
-% cb1 = colorbar(axe1,'Position',[.05 .11 .0675 .815]); 
-% cb2 = colorbar(axe2,'Position',[.88 .11 .0675 .815]); 
-%end copy paste
+%subplot
+t=tiledlayout(2,4,'TileSpacing','compact')
+s=@squeeze;
+%z
+nexttile;
+imout=imoverlay(mat2gray(mnit1.img(:,:,z)),regg.img(:,:,z),'yellow');
+imshow(imout);
+axis square
+
+%y
+nexttile;
+imout=imoverlay(s(mat2gray(mnit1.img(:,y,:))),s(regg.img(:,y,:)),'yellow');
+imshow(imout);
+axis square
+
+%x
+nexttile(5);
+imout=imoverlay(s(mat2gray(mnit1.img(x,:,:))),s(regg.img(x,:,:)),'yellow');
+imshow(imout);
+axis square
+
+
+
+
+
+
+
+
+% %begin old code with tiledlayout
+% %COPY and paste mathworks help
+% t=tiledlayout(4,4)
+% axe1=nexttile
+% % axe1 = axes; 
+% make_panel(t,axe1,mnit1.img(:,:,z)',regg.img(:,:,z)',1)
+% 
+% axe2=nexttile
+% % axe1 = axes; 
+% make_panel(t,axe2,squeeze(mnit1.img(:,y,:))',squeeze(regg.img(:,y,:))',2)
+% 
+% axe3=nexttile
+% % axe1 = axes; 
+% make_panel(t,axe3,squeeze(mnit1.img(x,:,:))',squeeze(regg.img(x,:,:))',3)
+
+
 
 
 
@@ -296,14 +288,8 @@ set([axe1,axe2],'Position',[.17 .11 .685 .815]);
 
 %% and here's a block for "contrast score"
 %need to apply the contrasts to these
-figure;
-tiledlayout(1,3)
-nexttile(1,[1 3])
 
-
-
-
-
+nexttile(3,[2 2])
 
     
 relweights=weights;
@@ -390,5 +376,58 @@ set(get(ax3,'XLabel'),'String',['Behavior Contrast Value: ' beh_label])
 
 % mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'));
 
+% 
+% function make_panel(t1,axes1,backgd,foregd,pos)
+% 
+% im = imagesc(axes1,backgd); 
+% im.AlphaData = 0.5; % change this value to change the background image transparency 
+% axis square; 
+% hold all; 
+% %plot second data 
+% axe2 = nexttile(pos); %okay, this line isn't even showing the second image
+% % set(axe2,'Parent',t1) % this command sticks the axes in the first position of the tiled layout
+% % %how could i set it to match the position of the other axes;
+% 
+% im1 = imagesc(axe2,foregd); 
+% im1.AlphaData = 0.5; % change this value to change the foreground image transparency 
+% axis square; 
+% %link axes 
+% linkaxes([axes1,axe2]) 
+% %%Hide the top axes 
+% axe2.Visible = 'off'; 
+% axe2.XTick = []; 
+% axe2.YTick = []; 
+% %add differenct colormap to different data if you wish 
+% colormap(axes1,'gray') 
+% colormap(axe2,'jet') 
+% %set the axes and colorbar position 
 
 
+% 
+% if false
+%     % tiled layout ideas
+%     tiledlayout(1,5)
+%     nexttile(1,[1 3])
+%     
+%     %% this block is specific to the line graph idea
+%     %get the distinguishable colors here
+%     for i=1:num_subs
+%         
+%         plot(1:num_tps,means{i},'Color',cvecs(i,:),'LineWidth',3.5)
+%         hold on
+%     end
+%     hold off
+%     
+%     ax=gca
+%     set(ax,'XTick',1:num_tps)
+%     set(ax,'XTickLabel',xaxlabels)
+%     set(ax,'XLim',[1-.3 num_tps+.3])
+%     
+%     
+%     %% okay, now add the stuff for beh scores
+%     nexttile
+%     
+%     scatter(ones(1,length(regressor)),regressor,35,cvecs,'filled')
+%     ax2=gca
+%     set(ax2,'XTick',[])
+% end
