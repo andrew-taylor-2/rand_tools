@@ -1,4 +1,4 @@
-function simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn,perf_label,beh_label,sans_vec)
+function varargout=simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn,perf_label,beh_label,sans_vec,graphcase)
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
@@ -19,6 +19,10 @@ function simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,fu
 % should make those names incorporate the outbasename
 
 do=get_anonymous_functions;
+
+if ~exist('graphcase','var')
+    graphcase='';
+end
 
 %try to load .mat config file
 cfg_fn=fullfile(fileparts(mfilename('fullpath')),'config.mat');
@@ -216,107 +220,115 @@ end
 
 %% begin the graphing
 
+
+
+
+
 xaxlabels={'BDC13','BDC7','HDT7','HDT29','R5','R12'};
-xaxlabels(logical(weights))=[];
+xaxlabels(~logical(weights))=[];
 %okay now we already have what to label the stuff with. 
 cvecs=distinguishable_colors(num_subs);
 
 
+%% graphing cases
 
-
-%% add brain
-
-figure;
-% OKAY i can't get gems to work so let's do this my way
-mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'));
-regg=d2n2s(sig_region_fn,'no','bvecbvaljson');
-
-[~,maxind]=max(regg.img(:));
-[x,y,z]=ind2sub(size(regg.img),maxind);
-
-%thresh regg
-regg.img(regg.img<.95)=0;
-
-%subplot
-t=tiledlayout(2,4,'TileSpacing','compact')
-s=@squeeze;
-%z
-nexttile;
-imout=imoverlay(mat2gray(mnit1.img(:,:,z)),regg.img(:,:,z),'yellow');
-imshow(imout);
-axis square
-
-%y
-nexttile;
-imout=imoverlay(s(mat2gray(mnit1.img(:,y,:))),s(regg.img(:,y,:)),'yellow');
-imshow(imout);
-axis square
-
-%x
-nexttile(5);
-imout=imoverlay(s(mat2gray(mnit1.img(x,:,:))),s(regg.img(x,:,:)),'yellow');
-imshow(imout);
-axis square
-
-
-
-
-
-
-
-
-% %begin old code with tiledlayout
-% %COPY and paste mathworks help
-% t=tiledlayout(4,4)
-% axe1=nexttile
-% % axe1 = axes; 
-% make_panel(t,axe1,mnit1.img(:,:,z)',regg.img(:,:,z)',1)
-% 
-% axe2=nexttile
-% % axe1 = axes; 
-% make_panel(t,axe2,squeeze(mnit1.img(:,y,:))',squeeze(regg.img(:,y,:))',2)
-% 
-% axe3=nexttile
-% % axe1 = axes; 
-% make_panel(t,axe3,squeeze(mnit1.img(x,:,:))',squeeze(regg.img(x,:,:))',3)
-
-
-
-
-
-
-
-%% and here's a block for "contrast score"
-%need to apply the contrasts to these
-
-nexttile(3,[2 2])
-
-    
-relweights=weights;
-relweights(weights==0)=[];
-for i=1:num_subs
-    summ{i}=zeros(size(data{i}{tp}));
-    for tp=1:num_tps
-        summ{i}=summ{i}+data{i}{tp}.*relweights(tp);
-    end
-    conmeans(i)=mean(summ{i},'all');
+switch graphcase
+    case {'','perf-beh-correlation'}
+        
+        %% add brain 3 views
+        
+        figure;
+        mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'));
+        regg=d2n2s(sig_region_fn,'no','bvecbvaljson');
+        
+        [~,maxind]=max(regg.img(:));
+        [x,y,z]=ind2sub(size(regg.img),maxind);
+        
+        %thresh regg
+        regg.img(regg.img<.95)=0;
+        
+        %subplot
+        t=tiledlayout(2,4,'TileSpacing','compact')
+        s=@squeeze;
+        %z
+        nexttile;
+        imout=imoverlay(mat2gray(mnit1.img(:,:,z)),regg.img(:,:,z),'yellow');
+        imshow(imout);
+        axis square
+        
+        %y
+        nexttile;
+        imout=imoverlay(s(mat2gray(mnit1.img(:,y,:))),s(regg.img(:,y,:)),'yellow');
+        imshow(imout);
+        axis square
+        
+        %x
+        nexttile(5);
+        imout=imoverlay(s(mat2gray(mnit1.img(x,:,:))),s(regg.img(x,:,:)),'yellow');
+        imshow(imout);
+        axis square
+        
+        
+        
+        %% add contrast score
+        %need to apply the contrasts to these
+        
+        nexttile(3,[2 2])
+        
+        
+        relweights=weights;
+        relweights(weights==0)=[];
+        for i=1:num_subs
+            summ{i}=zeros(size(data{i}{tp}));
+            for tp=1:num_tps
+                summ{i}=summ{i}+data{i}{tp}.*relweights(tp);
+            end
+            conmeans(i)=mean(summ{i},'all');
+        end
+        
+        
+        %% plot
+        hold on
+        for i=1:length(regressor)
+            if sans_vec(i)==1
+                scatter(conmeans(i),regressor(i),50,cvecs(i,:),'Marker','+')
+            else
+                scatter(conmeans(i),regressor(i),50,cvecs(i,:),'Marker','o')
+            end
+        end
+        hold off
+        
+        ax3=gca
+        set(get(ax3,'YLabel'),'String',['Perfusion Contrast Value: ' perf_label])
+        set(get(ax3,'XLabel'),'String',['Behavior Contrast Value: ' beh_label])
+        
+        
+        
+        
+    case 'perf-timecourse'
+        
+        %just graph "data" by time point
+        hold on
+        for i=1:num_subs
+            tpdatameans{i}=cellfun(@mean,data{i});
+            if sans_vec(i)==1
+                plot(tpdatameans{i},'Color',cvecs(i,:),'LineStyle','--')  %using plot(y) syntax
+            else
+                plot(tpdatameans{i},'Color',cvecs(i,:),'LineStyle','-')  %using plot(y) syntax
+            end
+        end
+        xticklabels(xaxlabels)
+        
+        %out
+        varargout{1}=tpdatameans;
+%         
+%     case 'dontgraph_returndata'
+%         varargout{1}=data;
+%         
+        
 end
 
 
-%actually plot
-hold on
-for i=1:length(regressor)
-    if sans_vec(i)==1
-        scatter(conmeans(i),regressor(i),50,cvecs(i,:),'Marker','+')
-    else
-        scatter(conmeans(i),regressor(i),50,cvecs(i,:),'Marker','o')
-    end
-end
-hold off
-
-ax3=gca
-set(get(ax3,'YLabel'),'String',['Perfusion Contrast Value: ' perf_label])
-set(get(ax3,'XLabel'),'String',['Behavior Contrast Value: ' beh_label])
 
 % set(ax3,'XTick',[])
 
