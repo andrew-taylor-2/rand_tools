@@ -39,7 +39,9 @@ else
     end
 end
 
-if ~exist(fsldir,'dir')
+if isempty(fsldir)
+    fsldir=getenv('FSLDIR')
+elseif ~exist(fsldir,'dir')
     error('fsldir doesn''t seem to exist')
 end
 
