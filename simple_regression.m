@@ -60,7 +60,7 @@ elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
         atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
     end
 end
-assert(exist(atlasfn,'file'))
+assert(logical(exist(atlasfn,'file')))
 
 if ~exist('opt_string','var') || isempty(opt_string)
     opt_string='';
@@ -106,9 +106,28 @@ end
 %% make the design and contrast matrices
 demean=@(x) x-mean(x(:));
 
-des=[ones(length(regressor),1),demean(regressor)];
+%separate nuisance and regressor
+if size(regressor,2)>1
+    disp('simple_regression thinks that you are including nuisance variables in your design -- if you''re not, consult with andrew lol')
+    nuisance=regressor(:,2:end);
+    regressor=regressor(:,1);
+    
+    for i=1:size(nuisance,2)
+        nuisance(:,i)=demean(nuisance(:,i));
+    end
+    
+    numnuis=size(nuisance,2);
+    zs=zeros(2,numnuis);
+        
+    des=[ones(length(regressor),1),demean(regressor),nuisance];
+    con=[[0 1; 0 -1] zs];
+    
+else %if you just have the one covariate
+    des=[ones(length(regressor),1),demean(regressor)];
+    con=[0 1; 0 -1];
+    
+end
 
-con=[0 1; 0 -1];
 
 %if output folder isnt' a folder yet, make it
 mkdir(pth)
