@@ -321,10 +321,18 @@ switch graphcase
         
         %out
         varargout{1}=tpdatameans;
-%         
-%     case 'dontgraph_returndata'
-%         varargout{1}=data;
-%         
+               
+        
+    case 'dontgraph_returndata'
+        
+        for i=1:num_subs
+            tpdatameans{i}=cellfun(@mean,data{i});
+        end
+        
+        varargout{1}=tpdatameans;
+        varargout{2}=cvecs;
+        varargout{3}=sans_vec;
+                
         
 end
 
