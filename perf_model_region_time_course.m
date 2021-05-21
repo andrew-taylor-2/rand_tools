@@ -1,4 +1,4 @@
-function [perf_rois,roi,inds]=perf_model_region_time_course(region_fn,in_fn,weights_raw,num_subs,num_timepoints)
+function [perf_rois,roi,inds]=perf_model_region_time_course(region_fn,in_fn,weights_raw,num_subs,num_timepoints,roithresh)
 do=get_anonymous_functions;
 %what do i want out of this? I think it's gonna be just the relevant area
 %from the region out of img_all. but it's got to be a full image/nii bc i
@@ -6,10 +6,13 @@ do=get_anonymous_functions;
 
 %I can't just get the mean because I don't know how it will be
 %partial masked.......
+if ~exist('roithresh','var')
+    roithresh=0.949999;
+end
 
 img_all=d2n2s(in_fn);
 region=d2n2s(region_fn);
-roi=region.img>0.94999;
+roi=region.img>roithresh;
 
 %make templates
 region.img=zeros(size(region.img));

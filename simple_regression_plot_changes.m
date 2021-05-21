@@ -1,4 +1,4 @@
-function varargout=simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn,perf_label,beh_label,sans_vec,graphcase)
+function varargout=simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn,perf_label,beh_label,sans_vec,graphcase,opts)
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
@@ -106,6 +106,14 @@ if ~exist('num_timepoints','var') || isempty(num_timepoints)
     num_timepoints=6;
 end
 
+if ~exist('opts','var') || ~isfield(opts,'trend')
+    opts.trend=0;
+end
+
+if ~exist('opts','var') || ~isfield(opts,'thresh')
+    opts.thresh=.949999;
+end
+
 [pth,nme,~]=fileparts(outbasename);
 
 %% make the design and contrast matrices
@@ -121,7 +129,8 @@ end
 %write text file
 % [matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
 
-[perf_rois,roi,inds]=perf_model_region_time_course(sig_region_fn,full_perfusion_image_fn,weights,num_subs,num_timepoints);
+regressor=regressor(:,1);
+[perf_rois,roi,inds]=perf_model_region_time_course(sig_region_fn,full_perfusion_image_fn,weights,num_subs,num_timepoints,opts.thresh);
 %indexing doesn't have to be crazy bc there's a mask for each sub, not for
 %each time point. Or maybe there is a mask for each TP....... no no just
 %kidding there isn't 
@@ -152,7 +161,7 @@ if use_partial_data
     functionalarea.img=double(roi); 
     
     %get the various masks
-    [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(functionalarea,weights,all_masks_fn,num_subs,num_timepoints,7);
+    [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(functionalarea,weights,all_masks_fn,num_subs,num_timepoints,num_subs-4);
     %functionalarea used to include areas where the mask was, but we
     %shouldn't need that bc the whole region is necessarily in it. 
     
@@ -179,7 +188,7 @@ else %actually, i think the rest of the script should end up in this conditional
     rand_cmd_addition='';
     
     functionalarea=d2n2s(sig_region_fn,'no','bvecbvaljson');
-    functionalarea.img(functionalarea.img<.949999)=0;
+    functionalarea.img(functionalarea.img<opts.thresh)=0;
     
     
     %write the new image and assign the filename to a variable
@@ -245,7 +254,7 @@ switch graphcase
         [x,y,z]=ind2sub(size(regg.img),maxind);
         
         %thresh regg
-        regg.img(regg.img<.95)=0;
+        regg.img(regg.img<opts.thresh)=0;
         
         %subplot
         t=tiledlayout(2,4,'TileSpacing','compact')
@@ -299,8 +308,25 @@ switch graphcase
         hold off
         
         ax3=gca
-        set(get(ax3,'YLabel'),'String',['Perfusion Contrast Value: ' perf_label])
-        set(get(ax3,'XLabel'),'String',['Behavior Contrast Value: ' beh_label])
+        set(get(ax3,'XLabel'),'String',['Perfusion Contrast Value: ' perf_label])
+        set(get(ax3,'YLabel'),'String',['Behavior Contrast Value: ' beh_label])
+        
+        % add trends?
+        if opts.trend==2
+            mdlSANS=fitlm(conmeans(sans_vec==1),regressor(sans_vec==1));
+            mdlNSANS=fitlm(conmeans(sans_vec~=1),regressor(sans_vec~=1));
+            
+            
+            refline(mdlSANS.Coefficients.Estimate(2),mdlSANS.Coefficients.Estimate(1))
+            refline(mdlNSANS.Coefficients.Estimate(2),mdlNSANS.Coefficients.Estimate(1))
+            
+        elseif opts.trend==1
+            mdl=fitlm(conmeans,regressor);
+            coefs=mdl.Coefficients.Estimate;
+            refline(coefs(2),coefs(1))
+        else
+        end
+        
         
         
         
