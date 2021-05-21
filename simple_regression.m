@@ -137,7 +137,7 @@ atlseg=[atlseg strrep(num2str(atlasindex),' ','_')];
 if use_partial_data
     
     %get the various masks
-    [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(functionalarea,weights,all_masks_fn,num_subs,num_timepoints,7);
+    [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(functionalarea,weights,all_masks_fn,num_subs,num_timepoints,num_subs-4);
     
     %then turn your .mats into new .mats with setup_masks
     [outmat,outcon,rand_cmd_addition,outmsg]=setup_masks(matfn,confn,outbasename,lmask_for_randomise);
