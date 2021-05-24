@@ -252,8 +252,8 @@ switch graphcase
         hold off
         
         ax3=gca
-        set(get(ax3,'XLabel'),'String',['Perfusion Contrast Value: ' perf_label])
-        set(get(ax3,'YLabel'),'String',['Behavior Contrast Value: ' beh_label])
+        set(get(ax3,'XLabel'),'String',[ perf_label])
+        set(get(ax3,'YLabel'),'String',[ beh_label])
         
         % add trends?
         if opts.trend==2
