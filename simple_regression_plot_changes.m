@@ -65,25 +65,6 @@ elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
         atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
     end
 end
-% assert(exist(atlasfn,'file'))
-% 
-% if ~exist('opt_string','var') || isempty(opt_string)
-%     opt_string='';
-% end
-% if ~exist('n','var') || isempty(n)
-%     n='5000';
-% elseif isscalar(n)
-%     n=num2str(n);
-% end
-% 
-% if ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && has_cfg
-%     cmask_fn=config.consensus_mask_fn;
-% elseif ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && ~has_cfg
-%     %not gonna give an error here, because this variable might not be
-%     %needed if use_partial_data
-% 
-% %     cmask_fn='/home/second/Desktop/new_perfusion/Data/common_mask_all_in_MNI.nii.gz';
-% end
 
 if ~isrow(weights)
     weights=weights';
@@ -121,17 +102,6 @@ end
 [pth,nme,~]=fileparts(outbasename);
 
 %% make the design and contrast matrices
-% demean=@(x) x-mean(x(:));
-% 
-% des=[ones(length(regressor),1),demean(regressor)];
-% 
-% con=[0 1; 0 -1];
-
-%if output folder isnt' a folder yet, make it
-% mkdir(pth)
-
-%write text file
-% [matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
 
 regressor=regressor(:,1);
 [perf_rois,roi,inds]=perf_model_region_time_course(sig_region_fn,full_perfusion_image_fn,weights,num_subs,num_timepoints,opts.thresh);
@@ -139,23 +109,6 @@ regressor=regressor(:,1);
 %each time point. Or maybe there is a mask for each TP....... no no just
 %kidding there isn't 
 
-%also I won't need this atlas code bc the region is necessarily within the
-%atlas
-% 
-% % isolate binary region from atlas
-% atlas=d2n2s(atlasfn);
-% functionalarea=just_these(atlas,atlasindex,1); % recently added a binarize option to just_these --
-% % I'm not sure if randomise treats masks differently based on their values
-% % or if it just binarizes based on ~=0 itself. So it's safest to binarize.
-% 
-% %come up with a good name for the region
-% [~,atlname,~]=fileparts(atlasfn);
-% if numel(atlname)>6
-%     atlseg=atlname(1:7);
-% else
-%     atlseg=atlname;
-% end
-% atlseg=[atlseg strrep(num2str(atlasindex),' ','_')];
 
 %I think find_the_best_mask() should come here.
 if use_partial_data
@@ -170,23 +123,6 @@ if use_partial_data
     %shouldn't need that bc the whole region is necessarily in it. 
     
     
-    %then turn your .mats into new .mats with setup_masks
-%     [outmat,outcon,rand_cmd_addition,outmsg]=setup_masks(matfn,confn,outbasename,lmask_for_randomise);
-%we don't need that line at all in this script    
-
-    %to avoid confusion
-%     delete(matfn)
-%     delete(confn)
-    
-%     matfn=outmat;
-%     confn=outcon;
-    
-    %write bin_mask and num_subs_image for 1 -m option randomise and 2. qc.
-%     ROI_fn=d2n2s_write(bin_mask,pth,[nme '_' atlseg '_partial_masked'],'dt',[0 2],'del',1)
-%     d2n2s_write(num_subs_image,pth,[nme '_num_subs_in_test'],'dt',[0 2],'del',1)
-
-%don't need to write for this script.
-
     
 else %actually, i think the rest of the script should end up in this conditional
     rand_cmd_addition='';
@@ -194,24 +130,9 @@ else %actually, i think the rest of the script should end up in this conditional
     functionalarea=d2n2s(sig_region_fn,'no','bvecbvaljson');
     functionalarea.img(functionalarea.img<opts.thresh)=0;
     
-    
-    %write the new image and assign the filename to a variable
-%     ROI_fn=d2n2s_write(functionalarea,pth,atlseg,'dt',[0 2],'del',1);
-%don't need to write for this script
 
 end
 
-%okay so normally randomise does masking for us, so I'm gonna have to write
-%a new function for masking now. 
-%   we'll use either functionalarea (no partial) or bin_mask and lmask.
-%   gonna have to use inds.(blah) to figure out what of lmask to use right?
-% is lmask one per subject or one per relevant timepoint?
-
-%mask EACH perf_roi and then get average for EACH element of perf_roi
-
-%i have these index changy things
-% inds.stp_2_1dim{i}{tp}=(i-1)*num_timepoints+(j);
-% inds.stp_2_ij{i}{tp}=[i,j];
 
 
 %sub-mask the perf roi:
@@ -382,118 +303,3 @@ switch graphcase
         
 end
 
-
-
-% set(ax3,'XTick',[])
-
-%ADD LABEL FOR SANS SUBS:
-% I should use different markers 
-%eg 'Marker','+' OR 'Marker','o' for sans,
-%nonsans
-
-%could i (instead of using whole significant region)
-% just use the most significant voxel? (this is too sophisticated to
-% implement now but also what if i used the biggest region where the most
-% subs had data)
-
-%% okay now add the part where we display the region on MNI
-% 
-% % COPY AND PASTED SPM GEMS FOLLOWS
-% % Make sure to first clear the graphics window
-%  
-% % Select images
-% % Pbck = spm_get(1,'*.img','Select background image')
-% Pbck=do.gunzip_and_rename(do.copy_and_rename(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'),'mnit12mm.nii.gz'));
-% % Psta = spm_get(1,'*.img','Select statistic image')
-% Psta=do.gunzip_and_rename_no_delete(sig_region_fn);
-%  
-% % Set the threshold value
-% Th   = 0.95;  
-%  
-% % Create a new image where all voxels below Th have value NaN
-% PstaTh = do.append(Psta,'nan4disp');
-% spm_imcalc(Psta,PstaTh,'i1+(0./(i1>=Th))',{[],[],spm_type('float')},Th);
-%  
-% % Display!
-% clear global st
-% ff=figure;
-% spm_orthviews('image',Pbck,[0.05 0.05 0.9 0.9],ff); %reposition using the line that happens later
-% spm_orthviews('addimage',1,PstaTh)
-%  
-% % Possibly, set the crosshairs to your favorite location
-% 
-% %find most significant voxel, reposition to it
-% %cant' believe im loading this again
-% regg=d2n2s(sig_region_fn);
-% [~,maxind]=max(regg.img(:));
-% [x,y,z]=ind2sub(size(regg.img),maxind)
-% ijk=regg.hdr.mat*[x,y,z,1]';
-% clear global st
-% spm_orthviews('reposition',[ijk(1) ijk(2) ijk(3)])
-% delete(Pbck)
-% % END GEMS 
-
-
-
-
-
-
-
-
-% mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'));
-
-% 
-% function make_panel(t1,axes1,backgd,foregd,pos)
-% 
-% im = imagesc(axes1,backgd); 
-% im.AlphaData = 0.5; % change this value to change the background image transparency 
-% axis square; 
-% hold all; 
-% %plot second data 
-% axe2 = nexttile(pos); %okay, this line isn't even showing the second image
-% % set(axe2,'Parent',t1) % this command sticks the axes in the first position of the tiled layout
-% % %how could i set it to match the position of the other axes;
-% 
-% im1 = imagesc(axe2,foregd); 
-% im1.AlphaData = 0.5; % change this value to change the foreground image transparency 
-% axis square; 
-% %link axes 
-% linkaxes([axes1,axe2]) 
-% %%Hide the top axes 
-% axe2.Visible = 'off'; 
-% axe2.XTick = []; 
-% axe2.YTick = []; 
-% %add differenct colormap to different data if you wish 
-% colormap(axes1,'gray') 
-% colormap(axe2,'jet') 
-% %set the axes and colorbar position 
-
-
-% 
-% if false
-%     % tiled layout ideas
-%     tiledlayout(1,5)
-%     nexttile(1,[1 3])
-%     
-%     %% this block is specific to the line graph idea
-%     %get the distinguishable colors here
-%     for i=1:num_subs
-%         
-%         plot(1:num_tps,means{i},'Color',cvecs(i,:),'LineWidth',3.5)
-%         hold on
-%     end
-%     hold off
-%     
-%     ax=gca
-%     set(ax,'XTick',1:num_tps)
-%     set(ax,'XTickLabel',xaxlabels)
-%     set(ax,'XLim',[1-.3 num_tps+.3])
-%     
-%     
-%     %% okay, now add the stuff for beh scores
-%     nexttile
-%     
-%     scatter(ones(1,length(regressor)),regressor,35,cvecs,'filled')
-%     ax2=gca
-%     set(ax2,'XTick',[])
-% end
