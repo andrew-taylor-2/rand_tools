@@ -186,23 +186,38 @@ switch graphcase
         s=@squeeze;
         %z
         nexttile;
-        imout=imoverlay(mat2gray(mnit1.img(:,:,z)),regg.img(:,:,z),'yellow');
+        imout=imoverlay(flip(mat2gray(mnit1.img(:,:,z))'),flip(regg.img(:,:,z)'),'yellow');
         imshow(imout);
         axis square
+        %title('Neurological');
+        
         
         %y
         nexttile;
-        imout=imoverlay(s(mat2gray(mnit1.img(:,y,:))),s(regg.img(:,y,:)),'yellow');
+        imout=imoverlay(flip(s(mat2gray(mnit1.img(:,y,:)))'),flip(s(regg.img(:,y,:))'),'yellow');
         imshow(imout);
         axis square
         
         %x
         nexttile(5);
-        imout=imoverlay(s(mat2gray(mnit1.img(x,:,:))),s(regg.img(x,:,:)),'yellow');
+        imout=imoverlay(flip(s(mat2gray(mnit1.img(x,:,:)))'),flip(s(regg.img(x,:,:))'),'yellow');
         imshow(imout);
         axis square
         
+        %text
+%         nexttile(6);
+%         text(1,1,{'result: positive correlation','x data: behavior stuff'})
+%         axis square
         
+%         if ~isempty(opts.table)
+%             opts.table
+%             Result='positive correlation'
+%             vox_data='perfusion drop'
+%             
+%             uitable('Data',Table(Result,vox_data),'ColumnName',T.Properties.VariableNames,...
+%     'RowName',T.Properties.RowNames,'Units', 'Normalized', 'Position',[0, 0, 1, 1]);
+%         
+%         
         
         %% add contrast score
         %need to apply the contrasts to these
