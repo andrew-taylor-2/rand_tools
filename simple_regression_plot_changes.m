@@ -244,9 +244,9 @@ switch graphcase
         hold on
         for i=1:length(regressor)
             if sans_vec(i)==1
-                scatter(conmeans(i),regressor(i),50,cvecs(i,:),'Marker','+')
+                scatter(conmeans(i),regressor(i),50,cvecs(i,:),'^','filled')
             else
-                scatter(conmeans(i),regressor(i),50,cvecs(i,:),'Marker','o')
+                scatter(conmeans(i),regressor(i),50,cvecs(i,:),'o','filled')
             end
         end
         hold off
