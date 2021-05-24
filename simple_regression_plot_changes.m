@@ -114,6 +114,10 @@ if ~exist('opts','var') || ~isfield(opts,'thresh')
     opts.thresh=.949999;
 end
 
+if ~exist('opts','var') || ~isfield(opts,'flip')
+    opts.flip=true;
+end
+
 [pth,nme,~]=fileparts(outbasename);
 
 %% make the design and contrast matrices
@@ -293,8 +297,12 @@ switch graphcase
                 summ{i}=summ{i}+data{i}{tp}.*relweights(tp);
             end
             conmeans(i)=mean(summ{i},'all');
+            
+                
         end
-        
+        if opts.flip
+            conmeans=-1*conmeans;
+        end
         
         %% plot
         hold on
@@ -333,6 +341,12 @@ switch graphcase
         
     case 'perf-timecourse'
         
+        if opts.flip
+            for i=1:num_subs
+                tpdatameans{i}=-1*tpdatameans{i};
+            end
+        end
+        
         %just graph "data" by time point
         hold on
         for i=1:num_subs
@@ -347,9 +361,15 @@ switch graphcase
         
         %out
         varargout{1}=tpdatameans;
-               
+        
         
     case 'dontgraph_returndata'
+        
+        if opts.flip
+            for i=1:num_subs
+                tpdatameans{i}=-1*tpdatameans{i};
+            end
+        end
         
         for i=1:num_subs
             tpdatameans{i}=cellfun(@mean,data{i});
