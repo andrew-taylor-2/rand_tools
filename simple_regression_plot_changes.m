@@ -117,6 +117,7 @@ if numel(opts.sv)~=num_subs
     error('the number of subjects doesn''t match the vector of subject labels. \nUse opts.exclude=[excluded subjects] to indicated which subs to take out')
 end
 
+assert(numel(sans_vec)==num_subs)
 
 
 [pth,nme,~]=fileparts(outbasename);
