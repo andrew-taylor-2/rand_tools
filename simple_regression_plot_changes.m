@@ -264,11 +264,16 @@ switch graphcase
         hold on
         for i=1:length(regressor)
             if sans_vec(i)==1
-                h{i}=scatter(conmeans(i),regressor(i),75,cvecs(i,:),'^','filled');
+                h(i)=scatter(conmeans(i),regressor(i),75,cvecs(i,:),'^','filled');
             else
-                h{i}=scatter(conmeans(i),regressor(i),75,cvecs(i,:),'o','filled');
+                h(i)=scatter(conmeans(i),regressor(i),75,cvecs(i,:),'o','filled');
             end
         end
+        
+        % now we make black markers for sans, non sans
+        L(1)=scatter(0,0,75,[0 0 0 ],'^','filled');
+        L(2)=scatter(0,0,75,[0 0 0 ],'o','filled');
+
         
         hold off
         
@@ -295,10 +300,12 @@ switch graphcase
   %JOE: Idea to add a lengend but still needs some editing
   
         %legend    
-        legend([h{:}],opts.sv);
+        legend([h L]',[opts.sv {'SANS','nonSANS'}]');
             %Gets the square/circle right but wonder if there is a way to
             %make them plain
 
+        %now make the 0 points go away
+        set(L,'Visible','off')
         
         
         
