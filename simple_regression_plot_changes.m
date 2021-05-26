@@ -244,16 +244,17 @@ switch graphcase
         hold on
         for i=1:length(regressor)
             if sans_vec(i)==1
-                scatter(conmeans(i),regressor(i),50,cvecs(i,:),'^','filled')
+                h_1=scatter(conmeans(i),regressor(i),75,cvecs(i,:),'^','filled');
             else
-                scatter(conmeans(i),regressor(i),50,cvecs(i,:),'o','filled')
+                h_2=scatter(conmeans(i),regressor(i),75,cvecs(i,:),'o','filled');
             end
         end
+        
         hold off
         
         ax3=gca
-        set(get(ax3,'XLabel'),'String',[ perf_label])
-        set(get(ax3,'YLabel'),'String',[ beh_label])
+        set(get(ax3,'XLabel'),'String',[ perf_label],'FontSize',14)
+        set(get(ax3,'YLabel'),'String',[ beh_label],'FontSize',14)
         
         % add trends?
         if opts.trend==2
@@ -271,6 +272,13 @@ switch graphcase
         else
         end
         
+  %JOE: Idea to add a lengend but still needs some editing
+  
+        %legend    
+        legend([h_1, h_2],{'SANS', 'NonSANS'});
+            %Gets the square/circle right but wonder if there is a way to
+            %make them plain
+
         
         
         
