@@ -99,6 +99,26 @@ if ~exist('opts','var') || ~isfield(opts,'flip')
     opts.flip=true;
 end
 
+%kludge
+if ~exist('opts','var') || ~isfield(opts,'subs')
+    opts.sv={'A','B','C','D','E','G','H','J','K','L','M'};
+end
+
+%take out subs if the user says to
+if ~exist('opts','var') || ~isfield(opts,'exclude')
+    opts.exclude=[];
+end
+
+%remove
+opts.sv(opts.exclude)=[];
+
+%see if it matches with the number of subs we've given
+if numel(opts.sv)~=num_subs
+    error('the number of subjects doesn''t match the vector of subject labels. \nUse opts.exclude=[excluded subjects] to indicated which subs to take out')
+end
+
+
+
 [pth,nme,~]=fileparts(outbasename);
 
 %% make the design and contrast matrices
@@ -244,9 +264,9 @@ switch graphcase
         hold on
         for i=1:length(regressor)
             if sans_vec(i)==1
-                h_1=scatter(conmeans(i),regressor(i),75,cvecs(i,:),'^','filled');
+                h{i}=scatter(conmeans(i),regressor(i),75,cvecs(i,:),'^','filled');
             else
-                h_2=scatter(conmeans(i),regressor(i),75,cvecs(i,:),'o','filled');
+                h{i}=scatter(conmeans(i),regressor(i),75,cvecs(i,:),'o','filled');
             end
         end
         
@@ -275,7 +295,7 @@ switch graphcase
   %JOE: Idea to add a lengend but still needs some editing
   
         %legend    
-        legend([h_1, h_2],{'SANS', 'NonSANS'});
+        legend([h{:}],opts.sv);
             %Gets the square/circle right but wonder if there is a way to
             %make them plain
 
