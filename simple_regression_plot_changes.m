@@ -300,9 +300,13 @@ switch graphcase
   %JOE: Idea to add a lengend but still needs some editing
   
         %legend    
-        legend([h L]',[opts.sv {'SANS','nonSANS'}]');
+        legend([h L]',[opts.sv {'SANS','nonSANS'}]','AutoUpdate','Off');
             %Gets the square/circle right but wonder if there is a way to
             %make them plain
+            
+         %Adding dotted lines at x=0 and y=0
+         xline(0,':');
+         yline(0,':');
 
         %now make the 0 points go away
         set(L,'Visible','off')
