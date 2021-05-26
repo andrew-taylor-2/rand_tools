@@ -202,10 +202,10 @@ switch graphcase
         regg.img(regg.img<opts.thresh)=0;
         
         %subplot
-        t=tiledlayout(2,4,'TileSpacing','compact')
+        t=tiledlayout(2,13,'TileSpacing','compact')
         s=@squeeze;
         %z
-        nexttile;
+        nexttile(1,[1 3]);
         imout=imoverlay(flip(mat2gray(mnit1.img(:,:,z))'),flip(regg.img(:,:,z)'),'yellow');
         imshow(imout);
         axis square
@@ -213,13 +213,13 @@ switch graphcase
         
         
         %y
-        nexttile;
+        nexttile(4,[1 3]);
         imout=imoverlay(flip(s(mat2gray(mnit1.img(:,y,:)))'),flip(s(regg.img(:,y,:))'),'yellow');
         imshow(imout);
         axis square
         
         %x
-        nexttile(5);
+        nexttile(14,[1 3]);
         imout=imoverlay(flip(s(mat2gray(mnit1.img(x,:,:)))'),flip(s(regg.img(x,:,:))'),'yellow');
         imshow(imout);
         axis square
@@ -242,7 +242,7 @@ switch graphcase
         %% add contrast score
         %need to apply the contrasts to these
         
-        nexttile(3,[2 2])
+        nexttile(8,[2 6])
         
         
         relweights=weights;
