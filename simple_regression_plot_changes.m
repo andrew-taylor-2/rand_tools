@@ -100,7 +100,7 @@ if ~exist('opts','var') || ~isfield(opts,'flip')
 end
 
 %kludge
-if ~exist('opts','var') || ~isfield(opts,'subs')
+if ~exist('opts','var') || ~isfield(opts,'sv')
     opts.sv={'A','B','C','D','E','G','H','J','K','L','M'};
 end
 
@@ -160,16 +160,28 @@ end
 num_tps=sum(logical(weights));
 for i=1:num_subs
     
-    %invert lmask
-    lmask_for_randomise(i).img(:)=~lmask_for_randomise(i).img; %stephen cobeldick says it's cool
+    if use_partial_data
+        %invert lmask
+        lmask_for_randomise(i).img(:)=~lmask_for_randomise(i).img; %stephen cobeldick says it's cool
         
-    %find an AND of lmask and sig region/functionalarea
-    lmask_for_randomise(i).img=lmask_for_randomise(i).img & functionalarea.img; % no need to repmat since we're doing it for every sub    repmat(functionalarea.img,[1 1 1 num_subs])
-    
-    for tp=1:num_tps
-        %for each tp find the mean
-        data{i}{tp}=perf_rois{i}{tp}.img(logical(lmask_for_randomise(i).img));
-        means{i}(tp)=mean(data{i}{tp},'all');
+        %find an AND of lmask and sig region/functionalarea
+        lmask_for_randomise(i).img=lmask_for_randomise(i).img & functionalarea.img; % no need to repmat since we're doing it for every sub    repmat(functionalarea.img,[1 1 1 num_subs])
+        
+        
+        for tp=1:num_tps
+            %for each tp find the mean
+            data{i}{tp}=perf_rois{i}{tp}.img(logical(lmask_for_randomise(i).img));
+            means{i}(tp)=mean(data{i}{tp},'all');
+        end
+        
+    else
+        
+        for tp=1:num_tps
+            %for each tp find the mean
+            data{i}{tp}=perf_rois{i}{tp}.img(logical(functionalarea.img));
+            means{i}(tp)=mean(data{i}{tp},'all');
+        end
+        
     end
 end
 
