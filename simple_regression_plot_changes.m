@@ -99,6 +99,10 @@ if ~exist('opts','var') || ~isfield(opts,'flip')
     opts.flip=true;
 end
 
+if ~exist('opts','var') || ~isfield(opts,'t1')
+    opts.t1=2; %set to 1 for 1mm mni
+end
+
 %kludge
 if ~exist('opts','var') || ~isfield(opts,'sv')
     opts.sv={'A','B','C','D','E','G','H','J','K','L','M'};
@@ -205,7 +209,11 @@ switch graphcase
         %% add brain 3 views
         
         figure;
-        mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'));
+        if opts.t1==1
+            mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_1mm.nii.gz'))
+        else
+            mnit1=d2n2s(fullfile(fsldir,'data','standard','MNI152_T1_2mm.nii.gz'));
+        end
         regg=d2n2s(sig_region_fn,'no','bvecbvaljson');
         
         [~,maxind]=max(regg.img(:));
