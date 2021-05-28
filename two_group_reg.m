@@ -1,4 +1,5 @@
 function two_group_reg(groupvector,regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints)
+%GROUPVECTOR MUST BE 1s AND 2s!!!!
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
@@ -63,7 +64,7 @@ elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
         atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
     end
 end
-assert(exist(atlasfn,'file'))
+assert(logical(exist(atlasfn,'file')))
 
 if ~exist('opt_string','var') || isempty(opt_string)
     opt_string='';
@@ -93,6 +94,17 @@ end
 
 if isrow(groupvector)
     groupvector=groupvector';
+end
+
+%handy
+do.paren=@(x,ind) x(ind);
+groupvector=double(groupvector); %or else logical array definition of 2 gets changed into 1
+if ~isequal([1 2]',unique(groupvector(:)))
+    if isequal([0 1]',unique(groupvector(:)))
+        groupvector(groupvector==0)=2;
+    else
+        error('groupvector should be comprised of 1s and 2s')
+    end
 end
 
 if ~exist('use_partial_data','var') || isempty(use_partial_data)
@@ -177,7 +189,7 @@ else %actually, i think the rest of the script should end up in this conditional
     
     
     %load the FOV inclusivity image, which we'll refer to as a "common mask"
-    cmask=d2n2s(cmask_fn);
+    cmask=d2n2s(cmask_fn,'no','bvecbvaljson');
     
     %now we want to set our motor area to 0 anywhere that our common mask has
     %1 (after the inversion we just did). On the next line is an assignment that only assigns to array elements
