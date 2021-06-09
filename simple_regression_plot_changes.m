@@ -336,27 +336,41 @@ switch graphcase
         
         
     case 'perf-timecourse'
-        
-        if opts.flip
-            for i=1:num_subs
-                tpdatameans{i}=-1*tpdatameans{i};
-            end
-        end
+%         
+%         if opts.flip
+%             for i=1:num_subs
+%                 tpdatameans{i}=-1*tpdatameans{i};
+%             end
+%         end
         
         %just graph "data" by time point
         hold on
         for i=1:num_subs
-            tpdatameans{i}=cellfun(@mean,data{i});
+%             tpdatameans{i}=cellfun(@mean,data{i});
             if sans_vec(i)==1
-                plot(tpdatameans{i},'Color',cvecs(i,:),'LineStyle','--')  %using plot(y) syntax
+%                 h(i)=plot(tpdatameans{i},'Color',cvecs(i,:),'LineStyle','--');  %using plot(y) syntax
+                h(i)=plot(means{i},'Color',cvecs(i,:),'LineStyle','--');  %using plot(y) syntax
             else
-                plot(tpdatameans{i},'Color',cvecs(i,:),'LineStyle','-')  %using plot(y) syntax
+%                 h(i)=plot(tpdatameans{i},'Color',cvecs(i,:),'LineStyle','-');  %using plot(y) syntax
+                h(i)=plot(means{i},'Color',cvecs(i,:),'LineStyle','-');  %using plot(y) syntax
             end
         end
+        xticks(1:size(means{1},2))
         xticklabels(xaxlabels)
         
+        
+        legend(h',[opts.sv]','AutoUpdate','Off');
+            %Gets the square/circle right but wonder if there is a way to
+            %make them plain
+            
+         %Adding dotted lines at x=0 and y=0
+         xline(0,':');
+         yline(0,':');
+        
+        
+        
         %out
-        varargout{1}=tpdatameans;
+        varargout{1}=means;
         
         
     case 'dontgraph_returndata'
