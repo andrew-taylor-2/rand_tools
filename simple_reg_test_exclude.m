@@ -1,8 +1,6 @@
-function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints)
-%regressor: should be a Nx1 element numerical matrix (where N=number
-%subjects)
-%weights: 1xTP element numerical matrix, weights for perfusion images
-%(where TP=number time points)
+function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,fullperfusionimage,cmask_fn,use_partial_data,all_masks_fn)
+%regressor: should be a 11x1 element numerical matrix.
+%weights: 1x6 element numerical matrix, weights for perfusion images
 %outbasename: char array, don't add a file extension.
 %n: number of permutations in randomise. 5000 is standard and the default but takes a
 %really long time.
@@ -12,55 +10,33 @@ function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string
 %fullperfusionimage: filename of that big perfusion image. just use
 %default.
 
-%fullperfusionimage, all_masks_fn must have all time points for subject 1
-%first, then all time points for subject 2, etc.
 
-% The functional regions could have the same name with different extents. I
-% should make those names incorporate the outbasename
+%cool potential config file stuff:
+%
+%     %load .mat config file
+%     if exist(fullfile(fileparts(mfilename),'config.mat'),'file')
+%         config=load(fullfile(fileparts(mfilename),'config.mat'));
+%     else
+%         error('you haven''t made a config.mat file with paths to data')
+%     end
+%     try all_masks_fn=config.all_masks_fn; catch, error('set up your config file!');end
 
-
-%try to load .mat config file
-cfg_fn=fullfile(fileparts(mfilename('fullpath')),'config.mat');
-if exist(cfg_fn,'file')
-    config=load(cfg_fn);
-    has_cfg=1;
-else
-%     error('you haven''t made a config.mat file with paths to data -- ')
-    has_cfg=0;
-end
 
 
 %% sanitize inputs
 
-if ( ~exist('full_perfusion_image_fn','var') || isempty(full_perfusion_image_fn) ) && has_cfg
-    full_perfusion_image_fn=config.full_functional_image_fn;
-elseif ( ~exist('full_perfusion_image_fn','var') || isempty(full_perfusion_image_fn) ) && ~has_cfg
-    error('no fullperfusionimage was input and cfg file cannot be found')
-%     full_perfusion_image_fn='/home/second/Desktop/new_perfusion/Data/Perfusion_all_timepoints_subs_in_MNI.nii';
+if ~exist('fullperfusionimage','var') || isempty(fullperfusionimage)
+    fullperfusionimage='/home/second/Desktop/new_perfusion/Data/Perfusion_all_timepoints_subs_in_MNI.nii';
 end
 
-
-if ( ~exist('all_masks_fn','var') || isempty(all_masks_fn) ) && has_cfg
-    all_masks_fn=config.full_data_coverage_image_fn;
-elseif ( ~exist('all_masks_fn','var') || isempty(all_masks_fn) ) && ~has_cfg
-    error('no all masks fn was input and cfg file cannot be found')
-%     all_masks_fn='/home/second/Desktop/new_perfusion/Data/66masks.nii';
-end
-
-if ( ~exist('atlasfn','var') || isempty(atlasfn) ) && has_cfg && ( isfield(config,'fsldir') && ~isempty(config.fsldir) )
-    fsldir=config.fsldir;
-    atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
-    
-elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
+if ~exist('atlasfn','var') || isempty(atlasfn)
     fsldir=getenv('FSLDIR');
     if ~isempty(fsldir)
         atlasfn=fullfile(fsldir,'data','atlases','Juelich','Juelich-maxprob-thr25-2mm.nii.gz');
     else
-%         error(' couldn''t find your atlas_fn')
         atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
     end
 end
-assert(logical(exist(atlasfn,'file')))
 
 if ~exist('opt_string','var') || isempty(opt_string)
     opt_string='';
@@ -71,13 +47,8 @@ elseif isscalar(n)
     n=num2str(n);
 end
 
-if ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && has_cfg
-    cmask_fn=config.consensus_mask_fn;
-elseif ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && ~has_cfg
-    %not gonna give an error here, because this variable might not be
-    %needed if use_partial_data
-
-%     cmask_fn='/home/second/Desktop/new_perfusion/Data/common_mask_all_in_MNI.nii.gz';
+if ~exist('cmask_fn','var') || isempty(cmask_fn)
+    cmask_fn='/home/second/Desktop/new_perfusion/Data/common_mask_all_in_MNI.nii.gz';
 end
 
 if ~isrow(weights)
@@ -92,42 +63,14 @@ if ~exist('use_partial_data','var') || isempty(use_partial_data)
     use_partial_data=0;
 end
 
-if ~exist('num_subs','var') || isempty(num_subs)
-    num_subs=11;
-end
-
-
-if ~exist('num_timepoints','var') || isempty(num_timepoints)
-    num_timepoints=6;
-end
-
 [pth,nme,~]=fileparts(outbasename);
 
 %% make the design and contrast matrices
 demean=@(x) x-mean(x(:));
 
-%separate nuisance and regressor
-if size(regressor,2)>1
-    disp('simple_regression thinks that you are including nuisance variables in your design -- if you''re not, consult with andrew lol')
-    nuisance=regressor(:,2:end);
-    regressor=regressor(:,1);
-    
-    for i=1:size(nuisance,2)
-        nuisance(:,i)=demean(nuisance(:,i));
-    end
-    
-    numnuis=size(nuisance,2);
-    zs=zeros(2,numnuis);
-        
-    des=[ones(length(regressor),1),demean(regressor),nuisance];
-    con=[[0 1; 0 -1] zs];
-    
-else %if you just have the one covariate
-    des=[ones(length(regressor),1),demean(regressor)];
-    con=[0 1; 0 -1];
-    
-end
+des=[ones(12,1),demean([regressor; regressor(1)+rand])]; %this was actually the only spot the parameters of our test were hardcoded......
 
+con=[0 1; 0 -1];
 
 %if output folder isnt' a folder yet, make it
 mkdir(pth)
@@ -135,7 +78,7 @@ mkdir(pth)
 %write text file
 [matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
 
-randimgfn=perf_model(full_perfusion_image_fn,weights,pth,[nme '_perfusion_image'],num_subs,num_timepoints);
+randimgfn=perf_model(fullperfusionimage,weights,pth,[nme '_perfusion_image']);
 
 % isolate binary region from atlas
 atlas=d2n2s(atlasfn);
@@ -156,7 +99,7 @@ atlseg=[atlseg strrep(num2str(atlasindex),' ','_')];
 if use_partial_data
     
     %get the various masks
-    [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(functionalarea,weights,all_masks_fn,num_subs,num_timepoints,num_subs-4);
+    [bin_mask,lmask_for_randomise,num_subs_image]=find_the_best_mask(functionalarea,weights,all_masks_fn);
     
     %then turn your .mats into new .mats with setup_masks
     [outmat,outcon,rand_cmd_addition,outmsg]=setup_masks(matfn,confn,outbasename,lmask_for_randomise);
@@ -169,8 +112,8 @@ if use_partial_data
     confn=outcon;
     
     %write bin_mask and num_subs_image for 1 -m option randomise and 2. qc.
-    ROI_fn=d2n2s_write(bin_mask,pth,[nme '_' atlseg '_partial_masked'],'dt',[0 2],'del',1)
-    d2n2s_write(num_subs_image,pth,[nme '_num_subs_in_test'],'dt',[0 2],'del',1)
+    ROI_fn=d2n2s_write(bin_mask,pth,[atlseg '_partial_masked'],'dt',[0 2],'del',1)
+    d2n2s_write(num_subs_image,pth,'num_subs_in_test','dt',[0 2],'del',1)
 
     
 else %actually, i think the rest of the script should end up in this conditional

@@ -1,4 +1,4 @@
-function varargout=simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,full_perfusion_image_fn,~,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn,perf_label,beh_label,sans_vec,graphcase,opts)
+function varargout=simple_regression_plot_changes(regressor,weights,outbasename,~,~,~,~,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints,sig_region_fn,perf_label,beh_label,sans_vec,graphcase,opts)
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
@@ -37,9 +37,9 @@ end
 
 %% sanitize inputs
 
-if ( ~exist('fullperfusionimage','var') || isempty(full_perfusion_image_fn) ) && has_cfg
+if ( ~exist('full_perfusion_image_fn','var') || isempty(full_perfusion_image_fn) ) && has_cfg
     full_perfusion_image_fn=config.full_functional_image_fn;
-elseif ( ~exist('fullperfusionimage','var') || isempty(full_perfusion_image_fn) ) && ~has_cfg
+elseif ( ~exist('full_perfusion_image_fn','var') || isempty(full_perfusion_image_fn) ) && ~has_cfg
     error('no fullperfusionimage was input and cfg file cannot be found')
 %     full_perfusion_image_fn='/home/second/Desktop/new_perfusion/Data/Perfusion_all_timepoints_subs_in_MNI.nii';
 end
@@ -65,6 +65,16 @@ elseif ( ~exist('atlasfn','var') || isempty(atlasfn) )
         atlasfn='/usr/local/fsl/data/atlases/Juelich/Juelich-maxprob-thr25-2mm.nii.gz';
     end
 end
+% 
+% 
+% if ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && has_cfg
+%     cmask_fn=config.consensus_mask_fn;
+% elseif ( ~exist('cmask_fn','var') || isempty(cmask_fn) ) && ~has_cfg
+%     %not gonna give an error here, because this variable might not be
+%     %needed if use_partial_data
+% 
+% %     cmask_fn='/home/second/Desktop/new_perfusion/Data/common_mask_all_in_MNI.nii.gz';
+% end
 
 if ~isrow(weights)
     weights=weights';
@@ -146,10 +156,22 @@ if use_partial_data
     
     
 else %actually, i think the rest of the script should end up in this conditional
+    error;
+    %THIS BRANCH WAS NOT INTENDED TO BE USED, DONT USE THIS
+    
     rand_cmd_addition='';
     
+    
+    %THIS PART WAS ADDED LATER AND HASTILY,  BE SUSPICIOUS
+    %(actually it's really straightforward so it's probably right)
+    
+    %load the FOV inclusivity image, which we'll refer to as a "common mask"
+    cmask=d2n2s(cmask_fn);
+ 
+
     functionalarea=d2n2s(sig_region_fn,'no','bvecbvaljson');
     functionalarea.img(functionalarea.img<opts.thresh)=0;
+    functionalarea.img(~logical(cmask.img))=0;
     
 
 end
