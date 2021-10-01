@@ -130,6 +130,25 @@ end
 assert(numel(sans_vec)==num_subs)
 
 
+%same_roi option is going to make it so that we use the same roi for all subjects so that means are comparable 
+if ~exist('opts','var') || ~isfield(opts,'same_roi')
+    opts.same_roi=true;
+end
+
+%% print some stuff so everyone knows whats going on 
+if opts.same_roi
+    warning(sprintf(['OPTION SAME_ROI IS TRUE. \nThis means you will be looking at means of the same region in each subject. \nNote that the region might be really small. The last optional output is the 4D region that was used.']))
+else
+    warning(sprintf(['OPTION SAME_ROI IS FALSE. \nAndrew''s understanding as of Oct 1, 2021, is that you will be using a different region for each subject to get means, which maybe be undesirable.']))
+end
+
+warning(sprintf(['\nthe file you are using for your ''full perfusion image'' is '  full_perfusion_image_fn]))
+warning(sprintf(['\nthe file you are using for your region is '  sig_region_fn]))
+warning(sprintf(['\nthe value you are using for your number of subjects is '  num2str(num_subs)]))
+warning(sprintf(['\nthe value you are using for your region is '  num2str(num_timepoints)]))
+warning(sprintf(['\nthe value you are using for the flip variable is '  num2str(opts.flip) '. ANY value other than 0 will multiply all voxel values by -1']))
+
+
 [pth,nme,~]=fileparts(outbasename);
 
 %% make the design and contrast matrices
@@ -188,13 +207,23 @@ for i=1:num_subs
     %find an AND of lmask and sig region/functionalarea
     lmask_for_randomise(i).img=lmask_for_randomise(i).img & functionalarea.img; % no need to repmat since we're doing it for every sub    repmat(functionalarea.img,[1 1 1 num_subs])
     
+end
+
+if opts.same_roi
+    bigmasksum=sum(cat(4,lmask_for_randomise.img),4);
+    bigmasksum(bigmasksum<num_subs)=0;
+    for i=1:num_subs    %could probably deal() but whatever
+        lmask_for_randomise(i).img=bigmasksum;
+    end
+end
+
+for i=1:num_subs
     for tp=1:num_tps
         %for each tp find the mean
         data{i}{tp}=perf_rois{i}{tp}.img(logical(lmask_for_randomise(i).img));
         means{i}(tp)=mean(data{i}{tp},'all');
     end
 end
-
 %% begin the graphing
 
 
@@ -338,17 +367,21 @@ switch graphcase
         
         
     case 'perf-timecourse'
-        
-        if opts.flip
-            for i=1:num_subs
-                tpdatameans{i}=-1*tpdatameans{i};
-            end
-        end
+%         
+%         if opts.flip
+%             for i=1:num_subs
+%                 tpdatameans{i}=-1*tpdatameans{i};
+%             end
+%         end
+%this used to be in the wrong place
         
         %just graph "data" by time point
         hold on
         for i=1:num_subs
             tpdatameans{i}=cellfun(@mean,data{i});
+            
+            if opts.flip, tpdatameans{i}=-1*tpdatameans{i}; end
+            
             if sans_vec(i)==1
                 plot(tpdatameans{i},'Color',cvecs(i,:),'LineStyle','--')  %using plot(y) syntax
             else
@@ -359,23 +392,29 @@ switch graphcase
         
         %out
         varargout{1}=tpdatameans;
+        varargout{2}=lmask_for_randomise;
+
         
         
     case 'dontgraph_returndata'
-        
-        if opts.flip
-            for i=1:num_subs
-                tpdatameans{i}=-1*tpdatameans{i};
-            end
-        end
+%         
+%         if opts.flip
+%             for i=1:num_subs
+%                 tpdatameans{i}=-1*tpdatameans{i};
+%             end
+%         end
+%used to be in the wrong place
         
         for i=1:num_subs
             tpdatameans{i}=cellfun(@mean,data{i});
+            
+            if opts.flip, tpdatameans{i}=-1*tpdatameans{i}; end
         end
         
         varargout{1}=tpdatameans;
         varargout{2}=cvecs;
         varargout{3}=sans_vec;
+        varargout{4}=lmask_for_randomise;
                 
         
 end
