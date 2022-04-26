@@ -1,4 +1,4 @@
-function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints)
+function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints,opts)
 %regressor: should be a Nx1 element numerical matrix (where N=number
 %subjects)
 %weights: 1xTP element numerical matrix, weights for perfusion images
@@ -101,6 +101,11 @@ if ~exist('num_timepoints','var') || isempty(num_timepoints)
     num_timepoints=6;
 end
 
+%tfce option
+if ~exist('opts','var') || ~isfield(opts,'t')
+    opts.t=1;
+end
+
 [pth,nme,~]=fileparts(outbasename);
 
 %% make the design and contrast matrices
@@ -199,7 +204,15 @@ end
 
 
 %make a new output base name
-system(['randomise -i ' randimgfn ' -o ' outbasename ' -d ' matfn ' -t ' confn ' -m ' ROI_fn ' --uncorrp ' opt_string rand_cmd_addition ' -n ' n ' -T > ' outbasename '_log.txt &'])
+
+%tfce or no
+if ~opts.t
+    tfce_string='';
+else
+    tfce_string=' -T';
+end
+
+system(['randomise -i ' randimgfn ' -o ' outbasename ' -d ' matfn ' -t ' confn ' -m ' ROI_fn ' --uncorrp ' opt_string rand_cmd_addition ' -n ' n tfce_string ' > ' outbasename '_log.txt &'])
 disp(sprintf(['\n **randomise is running in the background** \n **and its output is going to ' outbasename '_log.txt**']))
     
 
