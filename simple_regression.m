@@ -42,7 +42,7 @@ end
 
 if ( ~exist('all_masks_fn','var') || isempty(all_masks_fn) ) && has_cfg
     all_masks_fn=config.full_data_coverage_image_fn;
-elseif ( ~exist('all_masks_fn','var') || isempty(all_masks_fn) ) && ~has_cfg
+elseif ( ~exist('all_masks_fn','var') || isempty(all_masks_fn) ) && ~has_cfg && use_partial_data
     error('no all masks fn was input and cfg file cannot be found')
 %     all_masks_fn='/home/second/Desktop/new_perfusion/Data/66masks.nii';
 end
