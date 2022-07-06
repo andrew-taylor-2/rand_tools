@@ -32,9 +32,9 @@ end
 
 %% sanitize inputs
 
-if ( ~exist('fullperfusionimage','var') || isempty(full_perfusion_image_fn) ) && has_cfg
+if ( ~exist('full_perfusion_image_fn','var') || isempty(full_perfusion_image_fn) ) && has_cfg
     full_perfusion_image_fn=config.full_functional_image_fn;
-elseif ( ~exist('fullperfusionimage','var') || isempty(full_perfusion_image_fn) ) && ~has_cfg
+elseif ( ~exist('full_perfusion_image_fn','var') || isempty(full_perfusion_image_fn) ) && ~has_cfg
     error('no fullperfusionimage was input and cfg file cannot be found')
 %     full_perfusion_image_fn='/home/second/Desktop/new_perfusion/Data/Perfusion_all_timepoints_subs_in_MNI.nii';
 end
