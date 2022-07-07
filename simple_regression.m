@@ -138,7 +138,7 @@ end
 mkdir(pth)
 
 %write text file
-[matfn,confn,~,~]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
+[matfn,confn]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
 
 randimgfn=perf_model(full_perfusion_image_fn,weights,pth,[nme '_perfusion_image'],num_subs,num_timepoints);
 
