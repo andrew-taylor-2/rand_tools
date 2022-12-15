@@ -1,6 +1,11 @@
 function simple_regression(regressor,weights,outbasename,n,atlasindex,opt_string,atlasfn,full_perfusion_image_fn,cmask_fn,use_partial_data,all_masks_fn,num_subs,num_timepoints,opts)
 %regressor: should be a Nx1 element numerical matrix (where N=number
-%subjects)
+%subjects). Recently added support for multiple columns, with the columns
+%after the first being "nuisance variables" AKA in the model but not tested
+%for effect. HOWEVER, the row/column check in the beginning of this
+%function won't help if you enter these as multiple rows (isrow() only
+%works on 1dim) so just make sure yourself
+
 %weights: 1xTP element numerical matrix, weights for perfusion images
 %(where TP=number time points)
 %outbasename: char array, don't add a file extension.
@@ -212,7 +217,7 @@ else
     tfce_string=' -T';
 end
 
-system(['randomise -i ' randimgfn ' -o ' outbasename ' -d ' matfn ' -t ' confn ' -m ' ROI_fn ' --uncorrp ' opt_string rand_cmd_addition ' -n ' n tfce_string ' > ' outbasename '_log.txt &'])
+system(['randomise -i ' randimgfn ' -o ' outbasename ' -d ' matfn ' -t ' confn ' -m ' ROI_fn ' --uncorrp ' opt_string rand_cmd_addition ' -n ' n tfce_string ' > ' outbasename '_log.txt 2>' outbasename '_err.txt &'])
 disp(sprintf(['\n **randomise is running in the background** \n **and its output is going to ' outbasename '_log.txt**']))
     
 
