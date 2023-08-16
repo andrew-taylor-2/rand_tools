@@ -145,7 +145,11 @@ mkdir(pth)
 %write text file
 [matfn,confn]=make_design(des,con,[outbasename '_mat.txt'],[outbasename '_con.txt']);
 
-randimgfn=perf_model(full_perfusion_image_fn,weights,pth,[nme '_perfusion_image'],num_subs,num_timepoints);
+if ~isequal(weights,1)
+    randimgfn=perf_model(full_perfusion_image_fn,weights,pth,[nme '_perfusion_image'],num_subs,num_timepoints);
+else
+    randimgfn=full_perfusion_image_fn; %time saver
+end
 
 % isolate binary region from atlas
 atlas=d2n2s(atlasfn);
